@@ -33,6 +33,7 @@ def e3_tables(frac=0.95, e3_exp="E3", ref_exp="E1"):
     s["x"] = -np.log2(s.sigma_rel.clip(lower=1e-9))
     rows = []
     for (fam, m, n, p, seed, draw), g in s.groupby(["damage_type", "m", "n", "p", "seed", "draw"]):
+        g = g[g.sigma_rel > 1e-6]                       # drop zero-damage levels (e.g. rank s = m)
         xc, cen = crossing(g.x.values, g[curve].values, frac, xmin=-np.inf, xmax=np.inf)
         rows.append(dict(damage_type=fam, m=m, n=n, p=p, seed=seed, draw=draw, x_crit=xc, sigma_crit=2.0 ** (-xc) if np.isfinite(xc) else np.nan,
                          censor=cen, F=g.F.iloc[0], kappa_inf=g.kappa_inf.iloc[0]))

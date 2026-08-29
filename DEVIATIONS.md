@@ -55,7 +55,7 @@ with the CI excluding 0.5 → the preregistered ½-law is **rejected**; the κ-o
 tracks log2 κ with slope ≈ 1 where κ is not free to adapt (PTQ, E3; GPT-2, §5A) and if σ_rel,crit is flat in F.
 The original PREDICTIONS.md bands are still scored as written.
 
-## D3 (2026-08-29 13:05, after the pilot-checkpoint E3 run, before E1 results were analyzed)
+## D3 (2026-08-29 12:45, after the pilot-checkpoint E3 run, before E1 results were analyzed)
 
 **Evidence:** two artefacts in the D1 soft count surfaced on the post-hoc damage families.
 (i) Clipping ρ at 0 gives a positive Monte-Carlo bias on the ~1000–2000 unrepresented features whenever the
