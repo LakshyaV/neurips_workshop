@@ -84,8 +84,9 @@ non-circular statement of the κ-slope account; unbinned R² alongside binned) c
 
 ## D5 (2026-08-29 18:40, after the fourth external review; all other results already analysed)
 
-**Change:** the preregistered superposition proxy for GPT-2, F̂ = d_in/PR of the input covariance, is replaced as the primary
-real-model superposition measure by a direct per-block feature count, F_SAE = live features (≥ 20 firings on 49k tokens) of the
+**Change:** a post-hoc direct per-block SAE feature-count analysis was added because the preregistered covariance proxy
+F̂ = d_in/PR anticorrelates with SAE feature counts; the preregistered F̂ analyses remain reported and scored, and the SAE
+analysis is reported separately. The count is F_SAE = live features (≥ 20 firings on 49k tokens) of the
 public residual-stream sparse autoencoders (jbloom, 24,576 features at every block) divided by d_model = 768. Reason: F̂
 anticorrelates with F_SAE (r = −0.31 pooled over c_attn/c_fc inputs; −0.79 for c_fc), so it was not measuring what the
 preregistration assumed. F̂ results are still reported wherever they were preregistered (scoring table, per-matrix figure).
