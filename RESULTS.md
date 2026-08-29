@@ -81,6 +81,20 @@ With per-channel (per output column) scaling the pathology disappears and every 
 same width: b_crit,pc = 2.70 ± 0.33 bits (n = 43; range 2.0–3.4), uncorrelated with κ_eff (slope −0.01, R² = 0.00),
 per-tensor κ (R² = 0.00) or F̂ (R² = 0.00). Per-channel scaling equalises the layers. `figs/fig7b_lm_perchannel.png`.
 
+## §5A″ — Validating the superposition proxy with per-layer SAE feature counts (added after the third review)
+`src/lm_sae_layers.py`, `results/lm_sae_layers.csv`. For every block L, the public residual SAE (jbloom, blocks.L.hook_resid_pre)
+is run on 49k tokens; F_SAE(L) = live features (≥ 20 firings) / 768. SAE variance explained 0.97 (L0) → 0.75 (L11).
+
+| block | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| F_SAE | 5.8 | 3.3 | 4.3 | 6.9 | 10.7 | 14.7 | 17.9 | 20.1 | 21.9 | 23.3 | 20.9 | 22.4 |
+
+- The preregistered proxy F̂ = d_in/PR **anticorrelates** with F_SAE (pooled r = −0.31; mlp.c_fc inputs r = −0.79): it was not
+  measuring superposition. The earlier "F̂ predicts nothing" null is therefore replaced, not just weakened.
+- Against the real count (matrices reading each block's residual: c_attn + c_fc, 24 uncensored): log2 σ_crit vs log2 F_SAE
+  slope **+0.21 [0.03, 0.49]** (block-bootstrap CI), R² 0.16; joint fit log2 σ = −3.45 + 0.24·log2 κ + 0.24·log2 F_SAE.
+  Layers with more superposition are, if anything, slightly *more* tolerant of weight noise; the preregistered −½ is excluded.
+
 ## §5C — mixed precision on GPT-2 (held-out 49k tokens, all 48 matrices quantized jointly, per-channel RTN)
 ΔNLL (nats) at equal parameter-weighted average bits; κ-rule = b_i = c + log2 κ_eff,i; law = per-matrix
 1 + log2(1 + κ_eff/(√12 σ_crit,i)) shifted to the budget; oracle = greedy on measured single-matrix sensitivities;
