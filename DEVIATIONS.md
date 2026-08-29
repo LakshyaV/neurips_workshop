@@ -69,3 +69,15 @@ the explained variance of the features that the fp32 model of the same (config, 
 (‖W_i‖ ≥ 0.5), unclipped, with reference and damaged/quantized models evaluated on identical samples
 (paired). This is the soft analogue of the preregistered "features retained" count; damage to features the
 model never represented is reported separately (R_soft, all features). Threshold and interpolation rules as in D1.
+
+## D4 (2026-08-29 15:20, after an external review of the paper draft; all other results already analysed)
+
+**Change:** an activation-quantization arm was added to the GPT-2 experiments (`src/lm_act.py`): per-matrix input-activation
+RTN with a per-tensor absmax scale at 3–8 bits, and the activation outlier ratio κ_act = max|x|/rms(x). It was not in
+PREDICTIONS.md. The functional form tested — b_crit = const + log2 κ with slope 1 — is P2's, applied post hoc to a new
+quantity (activations) after all weight-side results were known. Its result (slope 1.12 [0.91, 1.39], R² 0.73; weight κ of
+the same matrix R² 0.12) is therefore reported as **exploratory / post-hoc extension of P2**, not as preregistered coverage.
+
+**Also recorded here:** the per-token (§5D) and SAE-feature (§5E) analyses were added after the preregistered analyses
+(same day, before this review) and are labelled exploratory; the review-driven wording changes (universal → F-independent;
+non-circular statement of the κ-slope account; unbinned R² alongside binned) change no number.
