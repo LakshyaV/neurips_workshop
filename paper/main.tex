@@ -1,6 +1,7 @@
 \documentclass{article}
 \PassOptionsToPackage{numbers,compress}{natbib}
 \usepackage[final]{neurips_2023}
+\makeatletter\renewcommand{\@noticestring}{Preprint. Under review at a NeurIPS 2026 workshop.}\makeatother
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{hyperref}
@@ -225,7 +226,27 @@ $0$ is what makes rounding benign for sparse weight matrices.
 Under uniform importance the represented features share nearly the same $\rho$, and quantization lowers the whole
 plateau together rather than truncating a prefix: the three best features of the fp32 model lose $\rho$ at the same
 bit-widths as the median one (Fig.~\ref{fig:e4}, appendix). ``Capacity'' is the wrong frame for this regime; the right one is
-uniform degradation of every represented direction by the same relative perturbation. %E5TEXT%
+uniform degradation of every represented direction by the same relative perturbation. With power-law importance $I_i=(i+1)^{-\alpha}$ (E5; $\alpha\in\{0.5,1,2\}$, 576 models) the model does drop
+features, from the tail, and quantization respects the order: the prefix fraction of the retained set is $0.96$--$0.98$
+at fp32 and $0.95$--$0.99$ at every $b\ge3$ (largest drop $0.03$ against the preregistered $0.10$ bar; P3 confirmed).
+The per-feature view is the sharpest result of the study (Fig.~\ref{fig:perfeature}): the ten most important features need
+$3$ bits in every configuration, the marginal ones $4$--$8{+}$, and across all $4{,}290$ live features the critical
+bit-width follows the feature's fp32 margin above the retention threshold,
+\begin{equation}
+b_i \;=\; c \;-\; 0.52\,\log_2\!\big(\rho_i^{\mathrm{fp32}}-\tfrac12\big),\qquad R^2 = 0.68 .
+\label{eq:perfeature}
+\end{equation}
+The half-bit-per-doubling exponent of the preregistered law is real---but the doubling that matters is a feature's
+margin, not the layer's superposition ratio. This is the mechanism behind the tail-loss phenomenon of compressed
+models~\cite{hooker2019,hooker2020}: rare and unimportant features sit closest to the threshold and are the first to be
+pushed under by any perturbation.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig6b_per_feature_bits.png}
+\caption{\textbf{Which features die first.} Per-feature critical bit-width against importance rank under power-law
+importance (mean over 4 seeds, features live at fp32). The head needs 3 bits everywhere; the tail needs up to 8 or more.}
+\label{fig:perfeature}
+\end{figure}
 
 
 \subsection{Moving $\kappa$ at fixed $F$ (E6)}
@@ -373,7 +394,13 @@ repository; every model is a few seconds of compute and the full study runs in a
 \caption{Mixed precision on GPT-2 small (Table~\ref{tab:mixed}).}
 \label{fig:mixed}
 \end{figure}
-%E2E5FIGS%
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{fig6_ordering.png}
+\caption{E5: prefix fraction (top) and hard feature count (bottom) against bit-width under power-law importance.}
+\label{fig:e5}
+\end{figure}
+%E2FIG%
 \paragraph{Deviations from the preregistration.} D1 (after E0, fp32 only): the hard count $N_{\mathrm{ret}}$ is degenerate
 under uniform importance; retention made continuous. D2 (after the sizing pilot, before E1/E3 were analysed): the
 gate-2 pilot rejected the $F$-dependence; the corrected derivation and its decision rule were recorded. D3 (after the
