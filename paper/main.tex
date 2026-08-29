@@ -14,7 +14,7 @@
 \usepackage{xcolor}
 \graphicspath{{../figs/}}
 
-\title{Does Superposition Need More Bits? \\ A Preregistered Test of a Precision--Capacity Law}
+\title{Superposition Is Free to Quantize: \\ Precision Cost Is Set by Outliers and Feature Margins, Not Feature Density}
 
 \author{%
   Lakshya \\
@@ -41,7 +41,10 @@ superposition the interference added by quantization must be compared with the i
 cancels. The resulting law, $b_{\mathrm{crit}} = 1+\log_2(1+\kappa/(\sqrt{12}\,\sigma^*))$, converts a one-line weight
 statistic into a per-layer bit requirement with no fitted parameter, reproduces GPT-2's per-matrix cliffs to
 $0.23$ bits from a continuous noise probe, and predicts---as we confirm---that per-channel scaling removes the outlier
-tax entirely, after which mixed precision has little left to gain.
+tax entirely. The half-bit-per-doubling exponent does exist, but at the level of individual features: a feature's critical
+bit-width follows its fp32 margin above threshold ($b_i = c - 0.52\log_2\mathrm{margin}_i$, $R^2=0.68$ over 4{,}290 toy
+features), and in GPT-2 the precision at which a next-token prediction breaks is set by its fp32 logit margin
+(binned $R^2 = 0.90$) rather than by token rarity---a mechanism for why compression deletes tail knowledge first.
 
 \end{abstract}
 
