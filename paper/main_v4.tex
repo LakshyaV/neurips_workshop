@@ -49,8 +49,8 @@ $\log_2\kappa$: causally in the toy model ($R^2=0.92$), across GPT-2's 48 weight
 which a quantizer-free noise arm predicts $0.54$) and for their input activations (slope $1.12$ [$0.91$, $1.39$], $R^2=0.73$). In an exploratory follow-up the half-bit-per-doubling exponent reappears one level down: a feature's critical
 bit-width follows its own fp32 margin, in the toy model ($R^2=0.68$), for GPT-2's next-token predictions ($R^2=0.23$ per token, $0.90$ for binned means) and for 22{,}499 sparse-autoencoder features ($R^2=0.45$ per feature;
 $0.94$ for binned means):
-quantization deletes a model's weakest features first, in an order a one-number statistic predicts. We use these results to introduce a pre-quantization vulnerability diagnostic
-from the fp32 model alone: margins predict which tokens a 4/5/6-bit model gets wrong (AUC 0.80/0.91/0.95; rarity 0.57), magnitudes predict which
+quantization deletes a model's weakest features first, in an order a one-number statistic predicts. We use these results to introduce a pre-quantization vulnerability diagnostic that,
+once calibrated, uses fp32 statistics alone: margins predict which tokens a 4/5/6-bit model gets wrong (AUC 0.80/0.91/0.95; rarity 0.57), magnitudes predict which
 SAE features are erased (AUC 0.87--0.94; frequency at chance), and the activation outlier ratio predicts which matrices need more
 than 5 activation bits (AUC 0.97).
 \end{abstract}
