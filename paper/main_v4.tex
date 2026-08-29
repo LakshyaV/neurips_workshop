@@ -24,7 +24,7 @@
 \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{0.8ex \@plus 0.3ex \@minus 0.2ex}{-1em}{\normalsize\bfseries}}
 \makeatother
 \setlist{nosep}
-\setlength{\parskip}{1pt plus 0.5pt}
+\setlength{\parskip}{0.5pt plus 0.5pt}
 \captionsetup{font=scriptsize}
 \graphicspath{{../figs/}}
 
@@ -47,7 +47,8 @@ stochastic rounding and Gaussian noise, together with the outlier ratio $\kappa=
 $\log_2\kappa$: causally in the toy model ($R^2=0.92$), across GPT-2's 48 weight matrices ($R^2=0.53$; slope $0.6$--$0.7$, of
 which a quantizer-free noise arm predicts $0.54$) and for their input activations (slope $1.12$ [$0.91$, $1.39$], $R^2=0.73$). In an exploratory follow-up the half-bit-per-doubling exponent reappears one level down: a feature's critical
 bit-width follows its own fp32 margin, in the toy model ($R^2=0.68$), for GPT-2's next-token predictions (logit margin, not
-rarity; $R^2=0.23$ per token, $0.90$ binned) and for 22{,}499 sparse-autoencoder features ($R^2=0.45$; $0.94$ binned):
+rarity; $R^2=0.23$ per token, $0.90$ for binned means) and for 22{,}499 sparse-autoencoder features ($R^2=0.45$ per feature;
+$0.94$ for binned means):
 quantization deletes a model's weakest features first, in an order a one-number statistic predicts. This yields a forecast from the fp32
 model alone: margins predict which tokens a 4/5/6-bit model gets wrong (AUC 0.80/0.91/0.95; rarity 0.57), magnitudes predict which
 SAE features are erased (AUC 0.87--0.94; frequency at chance), and the activation outlier ratio predicts which matrices need more
@@ -60,7 +61,8 @@ prevailing account of how networks represent sparse features, and every quantita
 infinite-precision weights; quantization stores those weights on a coarse grid. The two have never been connected, yet a
 connection is natural: a direction is only as resolvable as the grid it is stored on, so a layer
 that superposes more features per dimension ($F$) should need more bits, an intuition entertained, without controls, in
-the one prior experiment on the question~\cite{bitnets}. If true, it would convert a mechanistic quantity into an engineering one and give a representational account of the
+the one prior experiment on the question~\cite{bitnets}. We do not claim the field held this belief; we found it plausible
+enough to preregister, and the contribution is the mechanism that replaces it. If true, it would give a representational account of the
 weight-outlier counterpart of the folklore that outliers make layers hard to quantize~\cite{dettmers2022,xiao2023,lin2024awq}.
 
 We made the intuition precise and \emph{preregistered} it (Section~\ref{sec:background}): $b_{\mathrm{crit}} = 1 +
@@ -83,7 +85,7 @@ features ($R^2=0.45$ per feature, $0.94$ binned, $n=22{,}499$). This is a candid
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.60\linewidth]{fig_hero.png}
+\includegraphics[width=0.56\linewidth]{fig_hero.png}
 \caption{\textbf{Overview of the three main results.} \textbf{(a)} Critical bit-width (RTN, QAT, 95\,\% retention; mean $\pm$ SD over 4 seeds) against measured
 features-per-dimension for the main sweep, with the preregistered law. \textbf{(b)} $b_{\mathrm{crit}}$ against
 $\log_2\kappa$: toy models with $\kappa$ moved by weight clipping at fixed configuration, and GPT-2's 48 matrices (each
@@ -113,7 +115,7 @@ and $b_{\mathrm{crit}}$ is the interpolated width at which $R = 0.95$ ($b=2$ nev
 
 \begin{figure}[t]
 \centering
-\scalebox{0.56}{\begin{tikzpicture}[
+\scalebox{0.50}{\begin{tikzpicture}[
   node distance=4mm and 6mm, >=Latex, font=\small,
   box/.style={draw, rounded corners=2pt, minimum height=8mm, inner sep=4pt, align=center},
   data/.style={box, fill=blue!6},
@@ -210,8 +212,7 @@ and Gaussian noise all cost 5\,\% of the represented features' explained varianc
 0.10$--$0.23$, flat in $F$ (slopes $0.00$--$0.05$ against the predicted $-\nicefrac12$; 44 cells; Figure~\ref{fig:e3}, appendix). Structured damage behaves differently (dropout tolerated to $0.3$--$0.5$; rank truncation catastrophic).
 
 \subsection{Outliers set the bit-width, and a non-circular test of the slope}
- Across the sweep $b_{\mathrm{crit}} = 2.0+0.72\log_2\kappa$ ($R^2 = 0.82$;
-$b_{\mathrm{crit}}-\log_2\kappa = 1.99\pm0.31$). To break the collinearity of $\kappa$ with the live fraction we moved $\kappa$ directly: clipping weights at $c\cdot\mathrm{rms}(W)$ at fixed $(m,n,p)$ takes $\kappa$ from $7.1$ to $2.0$ and
+ Across the sweep $b_{\mathrm{crit}} = 2.0+0.72\log_2\kappa$ ($R^2 = 0.82$). To break the collinearity of $\kappa$ with the live fraction we moved $\kappa$ directly: clipping weights at $c\cdot\mathrm{rms}(W)$ at fixed $(m,n,p)$ takes $\kappa$ from $7.1$ to $2.0$ and
 $b_{\mathrm{crit}}$ from $4.69$ to $3.65$; pooled within-cell slope $0.65$, $R^2=0.92$ (Figure~\ref{fig:hero}b; Figure~\ref{fig:kappa}, appendix).
 In GPT-2 the independently measured per-tensor RTN cliff of each matrix follows $\log_2\kappa$ with slope $0.63$
 [$0.49$, $0.76$], $R^2 = 0.53$, against $R^2=0.14$ for $\hat F$, and
@@ -224,10 +225,10 @@ from the RTN arm is $0.63$ [$0.49$, $0.75$], a paired difference of $+0.09$ [$-0
 consistent within error, central value $0.1$ low, so the account explains part of the shortfall, not all. $\sigma^*$ is
 not a constant but a smooth function of $\kappa$ that is flat in $F$. With per-channel scaling the pathology
 disappears and every GPT-2 matrix crosses the threshold at $2.70\pm0.33$ bits, uncorrelated with $\kappa$ or $\hat F$;
-consequently mixed precision has little left to gain: uniform per-channel RTN is within $0.01$--$0.02$ nats of a
-sensitivity oracle at 4 and 5 bits, and a $\kappa$-based allocation is \emph{worse} than uniform there (Appendix~\ref{app:methods},
-Table~\ref{tab:mixed}). Dithered quantization is \emph{worse} than the shared lattice ($+0.27\pm0.13$ bits under QAT) because it moves
-the exact zeros of dead columns off the lattice; stochastic rounding is worse still ($+0.63\pm0.11$).
+consequently, on GPT-2 small with per-channel scaling, mixed precision has little left to gain: uniform per-channel RTN is
+within $0.01$--$0.02$ nats of a sensitivity-greedy allocation (single-matrix $\Delta$NLL, additivity assumed) at 4 and 5 bits, and a $\kappa$-based allocation is \emph{worse} than uniform there (Appendix~\ref{app:methods},
+Table~\ref{tab:mixed}). Dithered and stochastic rounding are worse than the shared lattice ($+0.27\pm0.13$ and $+0.63\pm0.11$ bits under QAT):
+the lattice's exact zero keeps dead columns dead.
 
 \subsection{Activation quantization (post hoc)}
 For each matrix alone, its input activations are quantized with per-tensor RTN; $\kappa_{\mathrm{act}}$ ranges from $10$ to $382$. The activation
@@ -237,8 +238,7 @@ $1.12$ [$0.91$, $1.39$], $R^2=0.73$ (Figure~\ref{fig:act}, appendix), whereas th
 
 \subsection{Which features die first: the per-feature law (exploratory)}
  Under power-law importance $I_i=(i+1)^{-\alpha}$ the toy model drops features
-from the tail, and quantization respects the order (prefix fraction unchanged, $0.95$--$0.99$). The ten most important features need 3 bits in every configuration, the marginal ones 4--8; across all 4{,}290
-live features the critical bit-width follows the feature's fp32 margin above the retention threshold, $b_i = c -
+from the tail, and quantization respects the order (prefix fraction unchanged, $0.95$--$0.99$). Across all 4{,}290 live features the critical bit-width follows the feature's fp32 margin above the retention threshold, $b_i = c -
 0.52\log_2(\rho_i^{\mathrm{fp32}}-\tfrac12)$, $R^2 = 0.68$. The same law holds inside GPT-2 twice. For next-token
 predictions (all matrices quantized jointly, per-channel RTN): at 4 bits, tokens with an fp32
 logit margin below $\nicefrac18$ flip 58\,\% of the time, margin 1--2 logits 9\,\%, margin above 8 logits 0.5\,\%; the
@@ -303,7 +303,7 @@ which features die? (exploratory) & toy: $b_i$ vs $\log_2$ margin ($n=4290$) & $
 \caption{Mixed precision on GPT-2 small: $\Delta$NLL (nats, held-out) at equal parameter-weighted average bits.}
 \label{tab:mixed}
 \begin{tabular}{lccccc}\toprule
-avg.\ bits & uniform & $\kappa$-rule & noise-probe law & oracle & random ($\times3$)\\\midrule
+avg.\ bits & uniform & $\kappa$-rule & noise-probe law & sensitivity-greedy & random ($\times3$)\\\midrule
 3.5 & -- & 3.56 & \textbf{1.86} & 2.08 & 3.6--4.1\\
 4.0 & \textbf{0.449} & 0.659 & 0.600 & 0.459 & 0.68--0.88\\
 4.5 & -- & 0.274 & \textbf{0.190} & 0.183 & 0.26--0.33\\
