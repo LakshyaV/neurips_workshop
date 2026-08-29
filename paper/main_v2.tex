@@ -204,8 +204,7 @@ which features die? (exploratory) & toy: $b_i$ vs $\log_2$ margin ($n=4290$) & $
 Toy models of superposition established the phenomenon and its geometry at infinite precision~\cite{elhage2022toy}; a
 LessWrong replication with BitLinear reported ``later superposition onset'' without controls~\cite{bitnets}---our
 E1/E3 contradict the resolution intuition behind both. Compression is known to hurt the long tail~\cite{hooker2019,hooker2020}
-and outliers to govern quantization difficulty~\cite{dettmers2022,xiao2023,lin2024awq,frantar2022gptq}; recent work locates
-low-bit failures architecturally~\cite{inputs2025}. We supply a mechanism at both levels for weight quantization: weight outliers set a layer's
+and outliers to govern quantization difficulty~\cite{dettmers2022,xiao2023,lin2024awq,frantar2022gptq}, and low-bit failures have architectural accounts~\cite{inputs2025}. We supply a mechanism at both levels for weight quantization: weight outliers set a layer's
 bit budget through an $F$-independent tolerance, and margins set which features go first. The bit-width formula itself is
 the standard uniform-quantizer noise relation inverted; its content is the measured behaviour of $\sigma^*$.
 
@@ -213,9 +212,8 @@ the standard uniform-quantizer noise relation inverted; its content is the measu
 The toy model is one tied layer with uniform importance in the main sweep; $\sigma^*$ is universal within it but its value
 depends on architecture and loss criterion, and in GPT-2 it varies $7\times$ across matrices. The superposition proxy
 $\hat F$ is crude, so the GPT-2 null against it is weaker than the toy null. The LM evidence is one 124M model, one
-corpus, one SAE layer, post-training only; whether the laws hold at 7B scale is untested. The activation arm is post-training, per-tensor and one matrix at a time; joint weight-plus-activation
-quantization is untested. The per-feature law is exploratory. The $\kappa$ slope is $\sim0.65$, not $1$; the noise-arm account of the shortfall is
-consistent within error but its central value is $0.1$ low, so part of the gap is unexplained. The preregistered hard count had to
+corpus, one SAE layer, post-training only; whether the laws hold at 7B scale is untested. Joint weight-plus-activation quantization is untested. The per-feature law is exploratory. The weight-$\kappa$ slope is $\sim0.65$, not $1$, and the noise-arm account
+explains only part of the gap. The preregistered hard count had to
 be replaced by a continuous retention measure (documented before the affected results were seen, App.~\ref{app:deviations}).
 What survives is simple and testable: superposition is free to quantize; a layer's bit budget is set by its outliers;
 and at any precision the features a model loses are its weakest, in an order that one number per feature predicts.
