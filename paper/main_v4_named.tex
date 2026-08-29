@@ -13,7 +13,7 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{caption}
-\usepackage{tikz}\usepackage{enumitem}
+\usepackage{tikz}\usepackage{enumitem}\usepackage{placeins}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc}
 \captionsetup{font=small,labelfont=bf,skip=2pt}
 \setlength{\textfloatsep}{3pt}\setlength{\intextsep}{3pt}\setlength{\floatsep}{3pt}
@@ -86,7 +86,7 @@ models~\cite{hooker2019,hooker2020}.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.70\linewidth]{fig_hero.png}
+\includegraphics[width=0.78\linewidth]{fig_hero.png}
 \caption{\textbf{Overview of the three main results.} \textbf{(a)} Critical bit-width (RTN, QAT, 95\,\% retention; mean $\pm$ SD over 4 seeds) against measured
 features-per-dimension for the main sweep, with the preregistered law. \textbf{(b)} $b_{\mathrm{crit}}$ against
 $\log_2\kappa$: toy models with $\kappa$ moved by weight clipping at fixed configuration, and GPT-2's 48 matrices (each
@@ -358,6 +358,7 @@ power-law importance the ten most important features need 3 bits in every config
 predicts which features need more than 4 bits with AUC $0.92$. Among SAE features, those contributing $2^{-7}$ of the residual rms
 need $5.5$--$6$ bits while those at $2^{0}$ survive at 3.
 \section{Experimental design and additional figures}
+Figure~\ref{fig:pipeline} shows the toy model and quantization pipeline, Figure~\ref{fig:design} the experimental design, and the remaining figures the per-experiment data referenced in the main text.
 \begin{figure}[h]\centering\includegraphics[width=\linewidth]{fig14_sae_count.png}
 \caption{Per-block SAE feature counts (left), their anticorrelation with the preregistered proxy (middle), and the noise threshold
 against the count with block labels (right).}\label{fig:saecount}\end{figure}
@@ -447,6 +448,7 @@ features are lost. Green: the real-model bridge on GPT-2 weights and activations
 \begin{figure}[h]\centering\includegraphics[width=0.6\linewidth]{fig9_mixed_precision.png}
 \caption{Mixed precision on GPT-2 small (Table~\ref{tab:mixed}).}\end{figure}
 
+\FloatBarrier
 \section{Declaration of LLM and agent usage}
 The experiments, analysis code and first drafts of this paper were implemented and executed by an AI coding agent
 (Claude Code) under the direction of the author, following a written, preregistered experimental plan; the author
