@@ -43,8 +43,10 @@ statistic into a per-layer bit requirement with no fitted parameter, reproduces 
 $0.23$ bits from a continuous noise probe, and predicts---as we confirm---that per-channel scaling removes the outlier
 tax entirely. The half-bit-per-doubling exponent does exist, but at the level of individual features: a feature's critical
 bit-width follows its fp32 margin above threshold ($b_i = c - 0.52\log_2\mathrm{margin}_i$, $R^2=0.68$ over 4{,}290 toy
-features), and in GPT-2 the precision at which a next-token prediction breaks is set by its fp32 logit margin
-(binned $R^2 = 0.90$) rather than by token rarity---a mechanism for why compression deletes tail knowledge first.
+features), and in GPT-2 the same law governs both next-token predictions (a token's fp32 logit margin, not its rarity, sets the
+precision at which it breaks; binned $R^2=0.90$) and internal sparse-autoencoder features (across 22{,}499 features the
+critical bit-width follows $\log_2$ strength with slope $-0.37$; binned $R^2=0.94$)---a mechanism for why compression
+deletes a model's weakest knowledge first.
 
 \end{abstract}
 
@@ -77,8 +79,9 @@ with the interference the model already lives with, and $F$ cancels; what surviv
 \emph{live} weights, $\kappa_{\mathrm{live}}$, which predicts the measured $b_{\mathrm{crit}}$ to within
 $0.2$ bits with no free parameter. (iv)~The per-feature version of the law is the sharpest result: under power-law importance each feature's critical
 bit-width follows its fp32 margin above threshold with the half-bit-per-doubling exponent ($R^2=0.68$ over 4{,}290
-features), and the same law holds for GPT-2's next-token predictions---a token's fp32 logit margin, not its rarity,
-sets the precision at which it breaks (binned $R^2 = 0.90$). (v)~In GPT-2 small, per-matrix noise thresholds carry no information about the superposition proxy ($R^2=0.04$) but track $\log_2\kappa$ ($R^2 = 0.53$ for the measured RTN cliff), and the noise-to-bits conversion reproduces each matrix's RTN cliff to $-0.23$ bits.
+features), and the same law holds inside GPT-2 for its next-token predictions (logit margin, not rarity, sets the precision at
+which a token breaks; binned $R^2=0.90$) and for 22{,}499 sparse-autoencoder features (strength sets the bit-width at
+which a feature is erased; slope $-0.37$, binned $R^2=0.94$). (v)~In GPT-2 small, per-matrix noise thresholds carry no information about the superposition proxy ($R^2=0.04$) but track $\log_2\kappa$ ($R^2 = 0.53$ for the measured RTN cliff), and the noise-to-bits conversion reproduces each matrix's RTN cliff to $-0.23$ bits.
 A negative result on a plausible, preregistered idea, with the mechanism that replaces it, is the contribution.
 
 
@@ -323,6 +326,29 @@ Right: the same ordering under joint Gaussian weight noise.}
 \label{fig:tokens}
 \end{figure}
 
+\subsection{Which internal features are erased: sparse-autoencoder features in GPT-2}
+Finally we test the per-feature law on a real model's \emph{internal} features. We take a public sparse autoencoder on the
+residual stream entering block 6 of GPT-2 small (24{,}576 features~\cite{bloom2024sae}; 84\,\% variance explained on our
+text, $L_0\approx58$), damage blocks 0--5 jointly (per-channel RTN, or Gaussian noise), and compare every feature's
+activation pattern with its fp32 pattern on the same 197k tokens, $\rho_f = 1 - \sum_t (a_f^{q}-a_f^{\mathrm{fp32}})^2 /
+\sum_t (a_f^{\mathrm{fp32}})^2$. Of the 22{,}499 live features, 26\,\% survive 3 bits, 84\,\% survive 4, 99\,\% survive 5.
+Which ones are erased is set by their strength (Fig.~\ref{fig:sae}): features contributing $2^{-7}$ of the residual-stream
+rms need $5.5$--$6$ bits, features contributing $2^{0}$ survive at $3$; the per-feature critical bit-width follows
+$\log_2$ magnitude with slope $-0.37$ [$-0.38$, $-0.37$] across all 22{,}499 features ($R^2 = 0.45$ per feature,
+$0.94$ for the binned means), and frequency adds nothing once magnitude is in the regression ($+0.02$). Each additional
+bit shifts the loss curve by $1.5$--$2$ octaves of strength, and Gaussian weight noise produces the same family of curves.
+Together with the toy features ($-0.52$) and the tokens ($-0.39$), the exponent is consistently a third to a half of a
+bit per doubling of a feature's margin: \emph{quantization erases a model's weakest features first, in an order and at a
+bit-width that a one-number statistic of each feature predicts.}
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig11_sae_features.png}
+\caption{\textbf{GPT-2 small, 24{,}576 SAE features at layer 6: which are erased.} Left: probability that a feature's
+activation pattern is lost ($\rho_f<0.5$) under joint per-channel RTN of blocks 0--5, by feature strength. Middle: mean
+per-feature critical bit-width against $\log_2$ strength. Right: the same ordering under Gaussian weight noise.}
+\label{fig:sae}
+\end{figure}
+
 \subsection{A calibration-free bit allocator}
 
 Because $\kappa$ is a one-line statistic of the weights, Eq.~\eqref{eq:corrected} suggests a calibration-free
@@ -370,7 +396,7 @@ $\log_2(\kappa_{\mathrm{before}}/\kappa_{\mathrm{after}})$ bits, up to the $\kap
 reconstruction; $\sigma^*$ is universal within it but its value ($0.12$--$0.23$ at 5\,\% loss) will differ for other
 architectures and loss criteria, and in GPT-2 it varies $7\times$ across matrices and correlates with $\kappa$. The
 superposition proxy $\hat F = d_{\mathrm{in}}/\mathrm{PR}$ is crude; a null against it is weaker than the toy null. The LM
-bridge is one 124M model, one corpus and post-training quantization only. The preregistered hard count had to be
+bridge is one 124M model, one corpus, one SAE layer and post-training quantization only. The preregistered hard count had to be
 replaced by a continuous retention measure (documented before the corresponding results were seen), and the
 quantization-aware arms depend on STE training details. The mixed-precision experiment shows no gain for the
 $\kappa$-rule on GPT-2 small once per-channel scaling is used; whether the noise-probe allocation's advantage between
@@ -391,6 +417,7 @@ repository; every model is a few seconds of compute and the full study runs in a
 \bibitem{frantar2022gptq} E.~Frantar, S.~Ashkboos, T.~Hoefler, D.~Alistarh. GPTQ: accurate post-training quantization for generative pre-trained transformers. arXiv:2210.17323, 2022.
 \bibitem{inputs2025} Why do some inputs break low-bit LLM quantization? arXiv:2506.12044, 2025.
 \bibitem{bitnets} Toy models of superposition: what about BitNets? \emph{LessWrong}, 2024.
+\bibitem{bloom2024sae} J.~Bloom. Open source sparse autoencoders for all residual stream layers of GPT-2 small (\texttt{jbloom/GPT2-Small-SAEs-Reformatted}). 2024.
 \end{thebibliography}
 
 \appendix
