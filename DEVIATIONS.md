@@ -1,6 +1,6 @@
 # DEVIATIONS.md — changes to the preregistered analysis, dated, with the evidence that forced them
 
-## D1 (2026-08-29 12:20, after E0 fp32-only replication, before any quantized result was inspected)
+## D1 (2026-08-29 11:55, after E0 fp32-only replication, before any quantized result was inspected)
 
 **Evidence (E0, fp32 only, m=30, n=400, uniform importance):** the hard count `N_ret = #{ρ_i ≥ 0.5}` is
 degenerate under uniform importance. The model does not drop features in this regime; it represents *all* live
@@ -23,3 +23,34 @@ seed-noisy (p=0.1: 74 vs 109 across two seeds with identical live-column counts 
 **What does not change:** the slope prediction (½ per doubling of F) is criterion-independent — the derivation
 sets an added-interference variance equal to a fixed fraction of the explainable variance, and any fixed
 fraction shifts only the intercept. Decision bands in PREDICTIONS.md apply unchanged to the soft-count slope.
+
+## D2 (2026-08-29 12:35, after the gate-2 pilot at m=16, n=2048, before E1/E3 results were analyzed)
+
+**Evidence (pilot, m=16, n=2048, 8000 steps, 4 seeds, QAT):** the models are at capacity for every p
+(live fraction k/n = 0.44/0.20/0.07/0.04 at p = 0.002/0.005/0.02/0.05; F = 55.9/25.3/8.6/5.2; κ = 4.8/6.2/10.3/13.5),
+κ has plateaued (< 1 % change over the last 2000 steps), R_soft(b) is monotone (0 violations), and
+**b_crit(R_soft = 0.95) = 3.38 / 3.42 / 3.54 / 3.41 (seed SD ≤ 0.11) — flat across a 10× range of F and a
+2.8× range of κ.** The preregistered law predicts 5.2–5.4 with a 1.5-bit spread. R_soft(b=3) ≈ 0.92 and
+R_soft(b=4) ≈ 0.99 at every p. No analysis choice changes this: the hard count, where defined, crosses in the
+same place.
+
+**Where the §2.2 derivation goes wrong.** It equates the *added* quantization interference with a fixed
+fraction of the explainable variance ν⁰. But at F ≫ 1 the fp32 model already carries interference many times
+ν⁰ per feature (the Welch bound gives Σ_j (W_i·W_j)² ≳ F − 1) and survives it through the ReLU with a strongly
+negative bias (E0: b_i ≈ −0.5 to −0.65). What the loss responds to is the added cross-talk *relative to the
+existing* cross-talk. Per pair, added variance ≈ 2σ_ε² (unit live columns), existing ≈ 1/m, so the relative
+increase is 2mσ_ε² = 2‖ε_i‖²/‖W_i‖² — exactly the squared relative perturbation of each feature direction,
+σ_rel² = ‖Q(W)−W‖_F²/‖W‖_F² (dead columns contribute zero to both). **F cancels.** Under a per-tensor max-abs
+quantizer σ_rel = κ/(√12·qmax), so the corrected prediction is
+
+    σ_rel,crit  independent of F          and          b_crit ≈ 1 + log2(1 + κ / (√12·σ_rel,crit)) = const + log2 κ.
+
+Superposition enters the bit budget only through κ (outliers inflate the per-tensor step), not through F.
+The same argument applies to any perturbation, so E3's noise-like families should show slope 0 on the
+σ_rel axis, not −½; PTQ quantization (no adaptation) should show the log2 κ dependence; QAT arms can
+additionally adapt κ, which would flatten even the κ term (the pilot is consistent with that).
+
+**Revised decision rule for E1/E3 (written before their results):** slope of b_crit vs log2 F in [−0.1, 0.15]
+with the CI excluding 0.5 → the preregistered ½-law is **rejected**; the κ-only law is supported if b_crit
+tracks log2 κ with slope ≈ 1 where κ is not free to adapt (PTQ, E3; GPT-2, §5A) and if σ_rel,crit is flat in F.
+The original PREDICTIONS.md bands are still scored as written.

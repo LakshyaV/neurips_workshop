@@ -1,0 +1,30 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 10360.45it/s]
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+  File "/Users/lakshya/Desktop/neurips workshop/superposition-precision/.venv/lib/python3.12/site-packages/datasets/load.py", line 1696, in load_dataset
+    builder_instance = load_dataset_builder(
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lakshya/Desktop/neurips workshop/superposition-precision/.venv/lib/python3.12/site-packages/datasets/load.py", line 1323, in load_dataset_builder
+    dataset_module = dataset_module_factory(
+                     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lakshya/Desktop/neurips workshop/superposition-precision/.venv/lib/python3.12/site-packages/datasets/load.py", line 1215, in dataset_module_factory
+    raise e1 from None
+  File "/Users/lakshya/Desktop/neurips workshop/superposition-precision/.venv/lib/python3.12/site-packages/datasets/load.py", line 1190, in dataset_module_factory
+    ).get_module()
+      ^^^^^^^^^^^^
+  File "/Users/lakshya/Desktop/neurips workshop/superposition-precision/.venv/lib/python3.12/site-packages/datasets/load.py", line 608, in get_module
+    standalone_yaml_path = cached_path(
+                           ^^^^^^^^^^^^
+  File "/Users/lakshya/Desktop/neurips workshop/superposition-precision/.venv/lib/python3.12/site-packages/datasets/utils/file_utils.py", line 180, in cached_path
+    ).resolve_path(url_or_filename)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lakshya/Desktop/neurips workshop/superposition-precision/.venv/lib/python3.12/site-packages/huggingface_hub/hf_file_system.py", line 305, in resolve_path
+    parsed = parse_hf_uri(f"{constants.HF_PROTOCOL}{path}")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lakshya/Desktop/neurips workshop/superposition-precision/.venv/lib/python3.12/site-packages/huggingface_hub/utils/_hf_uris.py", line 319, in parse_hf_uri
+    return _parse_repo_body(location, type_, raw=raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lakshya/Desktop/neurips workshop/superposition-precision/.venv/lib/python3.12/site-packages/huggingface_hub/utils/_hf_uris.py", line 617, in _parse_repo_body
+    raise HfUriError(uri=raw, msg=f"Repository id must be 'namespace/name', got '{repo_id}'.")
+huggingface_hub.errors.HfUriError: Invalid HF URI 'hf://datasets/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3/.huggingface.yaml'. Repository id must be 'namespace/name', got 'wikitext'.

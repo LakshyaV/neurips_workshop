@@ -1,0 +1,45 @@
+=== E1_m10_n40: K=128 models, m=10, n=40, steps=6000, B=1024
+/Users/lakshya/Desktop/neurips workshop/superposition-precision/src/train.py:112: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /Users/runner/work/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:823.)
+  print(f"  [{exp} m={m} n={n} K={K}] step {step:5d} loss {float(loss):.4f} "
+  [E1 m=10 n=40 K=128] step     0 loss 24.1590 kappa(mean) 3.05  3s
+  [E1 m=10 n=40 K=128] step  1000 loss 8.9189 kappa(mean) 2.58  10s
+  [E1 m=10 n=40 K=128] step  2000 loss 8.9222 kappa(mean) 2.59  19s
+  [E1 m=10 n=40 K=128] step  3000 loss 8.4832 kappa(mean) 2.59  28s
+  [E1 m=10 n=40 K=128] step  4000 loss 8.5746 kappa(mean) 2.60  37s
+  [E1 m=10 n=40 K=128] step  5000 loss 8.5397 kappa(mean) 2.60  44s
+  [E1 m=10 n=40 K=128] step  5999 loss 8.5895 kappa(mean) 2.60  53s
+  done: train 53s, eval 199999 samples; N_ret by model: [17, 20, 17, 20, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40]...
+=== E1_m10_n40 done in 56s (total 56s)
+=== E1_m10_n80: K=128 models, m=10, n=80, steps=6000, B=1024
+  [E1 m=10 n=80 K=128] step     0 loss 53.8479 kappa(mean) 3.48  0s
+  [E1 m=10 n=80 K=128] step  1000 loss 38.5694 kappa(mean) 2.83  16s
+  [E1 m=10 n=80 K=128] step  2000 loss 37.6240 kappa(mean) 2.90  32s
+  [E1 m=10 n=80 K=128] step  3000 loss 37.1098 kappa(mean) 2.93  48s
+  [E1 m=10 n=80 K=128] step  4000 loss 36.9681 kappa(mean) 2.94  63s
+  [E1 m=10 n=80 K=128] step  5000 loss 36.7508 kappa(mean) 2.94  80s
+  [E1 m=10 n=80 K=128] step  5999 loss 36.3549 kappa(mean) 2.94  94s
+  done: train 94s, eval 199999 samples; N_ret by model: [19, 19, 20, 20, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80]...
+=== E1_m10_n80 done in 96s (total 151s)
+=== E1_m10_n160: K=128 models, m=10, n=160, steps=6000, B=1024
+  [E1 m=10 n=160 K=128] step     0 loss 116.2985 kappa(mean) 3.57  0s
+  [E1 m=10 n=160 K=128] step  1000 loss 102.7791 kappa(mean) 3.21  30s
+  [E1 m=10 n=160 K=128] step  2000 loss 100.1129 kappa(mean) 3.40  62s
+  [E1 m=10 n=160 K=128] step  3000 loss 100.8723 kappa(mean) 3.46  91s
+  [E1 m=10 n=160 K=128] step  4000 loss 100.7435 kappa(mean) 3.48  110s
+  [E1 m=10 n=160 K=128] step  5000 loss 99.5731 kappa(mean) 3.48  129s
+  [E1 m=10 n=160 K=128] step  5999 loss 100.3878 kappa(mean) 3.48  153s
+  done: train 153s, eval 199999 samples; N_ret by model: [20, 20, 2, 19, 121, 121, 115, 129, 159, 157, 153, 159, 159, 160, 160, 160]...
+=== E1_m10_n160 done in 157s (total 309s)
+=== E1_m10_n320: K=128 models, m=10, n=320, steps=6000, B=1024
+  [E1 m=10 n=320 K=128] step     0 loss 244.8390 kappa(mean) 3.78  0s
+  [E1 m=10 n=320 K=128] step  1000 loss 233.1950 kappa(mean) 4.05  71s
+  [E1 m=10 n=320 K=128] step  2000 loss 227.4381 kappa(mean) 4.37  142s
+  [E1 m=10 n=320 K=128] step  3000 loss 229.1691 kappa(mean) 4.42  225s
+  [E1 m=10 n=320 K=128] step  4000 loss 228.0624 kappa(mean) 4.43  314s
+  [E1 m=10 n=320 K=128] step  5000 loss 230.2179 kappa(mean) 4.44  738s
+  [E1 m=10 n=320 K=128] step  5999 loss 227.9998 kappa(mean) 4.44  795s
+  done: train 795s, eval 199999 samples; N_ret by model: [0, 19, 6, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]...
+=== E1_m10_n320 done in 801s (total 1110s)
+=== E1_m10_n640: K=128 models, m=10, n=640, steps=6000, B=1024
+  [E1 m=10 n=640 K=128] step     0 loss 505.1318 kappa(mean) 3.90  0s

@@ -47,14 +47,21 @@ def n_ret(rho, thr=0.5):
 
 
 @torch.no_grad()
-def feature_dims(W):
-    """D_i = ||W_i||^4 / sum_j (W_i . W_j)^2  for W:[K,m,n] (columns = features). Sum_i D_i <= m."""
-    G = torch.einsum("kmi,kmj->kij", W, W)            # Gram [K,n,n]
-    norm2 = torch.diagonal(G, dim1=1, dim2=2)         # [K,n]
-    denom = (G ** 2).sum(dim=2).clamp_min(1e-30)
-    D = norm2 ** 2 / denom
-    D = torch.where(norm2 > 1e-12, D, torch.zeros_like(D))
-    return D
+def feature_dims(W, max_bytes=2 ** 28):
+    """D_i = ||W_i||^4 / sum_j (W_i . W_j)^2  for W:[K,m,n] (columns = features). Sum_i D_i <= m.
+    Chunked over models so the [k,n,n] Gram never exceeds ~max_bytes."""
+    K, m, n = W.shape
+    kc = max(1, int(max_bytes // (n * n * 4)))
+    out = []
+    for s in range(0, K, kc):
+        Wc = W[s:s + kc]
+        G = torch.einsum("kmi,kmj->kij", Wc, Wc)            # Gram [k,n,n]
+        norm2 = torch.diagonal(G, dim1=1, dim2=2)           # [k,n]
+        denom = (G ** 2).sum(dim=2).clamp_min(1e-30)
+        D = norm2 ** 2 / denom
+        out.append(torch.where(norm2 > 1e-12, D, torch.zeros_like(D)))
+        del G
+    return torch.cat(out, dim=0)
 
 
 @torch.no_grad()

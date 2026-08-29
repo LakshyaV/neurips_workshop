@@ -53,7 +53,7 @@ def run_ckpt(path, device, families, out_rows):
     p_G = torch.tensor([k[0] for k in keys], dtype=torch.float32)
     gidx0 = torch.tensor([keys.index((float(s["p"]), int(s["seed"]))) for s in sp], device=device)
     kap0 = kappa(W).cpu().numpy()
-    eval_samples = int(max(40000, 400.0 / float(p_G.min())))
+    eval_samples = int(max(40000, 100.0 / float(p_G.min())))
     tag = os.path.basename(path).replace(".pt", "")
     for fam in families:
         knobs = FAMILIES[fam] if FAMILIES[fam] is not None else list(range(1, m + 1))

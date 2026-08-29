@@ -66,7 +66,7 @@ def main():
     for tag, m, n, specs, steps in groups_for(args.exp, args):
         if args.only and args.only not in tag:
             continue
-        B = args.batch if n < 2048 else min(args.batch, 512)
+        B = args.batch if n < 1024 else min(args.batch, 512)
         print(f"=== {tag}: K={len(specs)} models, m={m}, n={n}, steps={steps}, B={B}", flush=True)
         tg = time.time()
         rows, log, _ = train_group(specs, m, n, steps=steps, B=B, device=args.device, exp=args.exp,

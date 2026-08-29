@@ -1,0 +1,5 @@
+=== results/ckpt/pilot_m16_n2048.pt
+  pilot_m16_n2048 ptq_uniform: 7 levels x 16 models in 10s; N_ret range 0..136
+  pilot_m16_n2048 ptq_dither: 14 levels x 16 models in 18s; N_ret range 0..135
+  pilot_m16_n2048 ptq_perchannel: 7 levels x 16 models in 9s; N_ret range 0..136
+  pilot_m16_n2048 ptq_stochastic: 14 levels x 16 models in 18s; N_ret range 0..136
