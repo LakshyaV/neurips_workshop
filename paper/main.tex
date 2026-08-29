@@ -72,7 +72,10 @@ explained variance at the same relative perturbation $\sigma_{\mathrm{rel}} = \l
 (iii)~A corrected derivation explains the null: at $F\gg1$ the interference added by quantization must be compared
 with the interference the model already lives with, and $F$ cancels; what survives is the outlier ratio of the
 \emph{live} weights, $\kappa_{\mathrm{live}}$, which predicts the measured $b_{\mathrm{crit}}$ to within
-$0.2$ bits with no free parameter. (iv)~In GPT-2 small, per-matrix noise thresholds carry no information about the superposition proxy ($R^2=0.04$) but track $\log_2\kappa$ ($R^2 = 0.53$ for the measured RTN cliff), and the noise-to-bits conversion reproduces each matrix's RTN cliff to $-0.23$ bits.
+$0.2$ bits with no free parameter. (iv)~The per-feature version of the law is the sharpest result: under power-law importance each feature's critical
+bit-width follows its fp32 margin above threshold with the half-bit-per-doubling exponent ($R^2=0.68$ over 4{,}290
+features), and the same law holds for GPT-2's next-token predictions---a token's fp32 logit margin, not its rarity,
+sets the precision at which it breaks (binned $R^2 = 0.90$). (v)~In GPT-2 small, per-matrix noise thresholds carry no information about the superposition proxy ($R^2=0.04$) but track $\log_2\kappa$ ($R^2 = 0.53$ for the measured RTN cliff), and the noise-to-bits conversion reproduces each matrix's RTN cliff to $-0.23$ bits.
 A negative result on a plausible, preregistered idea, with the mechanism that replaces it, is the contribution.
 
 
@@ -249,6 +252,12 @@ importance (mean over 4 seeds, features live at fp32). The head needs 3 bits eve
 \end{figure}
 
 
+\paragraph{Lattice controls under QAT (E2).} Training through the alternative quantizers gives the same ordering as
+post-training: relative to the shared uniform lattice, dithered rounding costs $+0.27\pm0.13$ bits and stochastic rounding
+$+0.63\pm0.11$, while per-channel scaling saves $0.54\pm0.09$ (paired over 12 configurations, Fig.~\ref{fig:e2}); none of the
+four quantizers shows an $F$-dependence. Models exploit the shared lattice, but what they exploit is its exact zero
+(dead columns stay dead), not fine alignment.
+
 \subsection{Moving $\kappa$ at fixed $F$ (E6)}
 
 Clipping weights at $c\cdot\mathrm{rms}(W)$ moves $\kappa$ from $7.1$ to $2.0$ at fixed $(m,n,p)$ while $F$ changes by
@@ -290,6 +299,26 @@ zero at every width $\le 6$, damage is non-monotone in bits, and joint damage is
 bits: $+4.6$ nats vs.\ $1.6$ summed)---which is precisely the regime the toy analysis flags as ``$q_{\max}\Delta$ larger than the
 bulk''. With per-channel scaling this regime disappears, and the relevant statistic becomes the norm-weighted per-channel
 outlier ratio $\kappa_{\mathrm{eff}}$: every matrix crosses $\Delta\mathrm{NLL}=0.05$ at $2.70\pm0.33$ bits (range 2.0--3.4, $n=43$), uncorrelated with $\kappa_{\mathrm{eff}}$, $\kappa$ or $\hat F$ ($R^2 = 0.00$ for all three). Per-channel scaling equalises the layers, which is what the law predicts once the per-channel outlier ratios are small and similar.
+
+\subsection{Which tokens break first: the per-feature law in GPT-2}
+A language model has a natural set of ``features'' that needs no external probe: its next-token predictions, each with an
+fp32 logit margin (correct logit minus the runner-up). The per-feature law predicts that a token's critical bit-width is
+set by that margin. With all 48 matrices quantized jointly (per-channel RTN) on 49k held-out tokens, it is
+(Fig.~\ref{fig:tokens}): at 4 bits, tokens with an fp32 margin below $\nicefrac18$ logit flip 58\,\% of the time,
+tokens with margin 1--2 logits 9\,\%, and tokens with margin above 8 logits 0.5\,\%; the binned mean critical bit-width
+falls with $\log_2$ margin with slope $-0.39$, $R^2=0.90$ (per token $-0.34$ [$-0.35$, $-0.32$]). Margin, not rarity,
+is the driver: jointly, $b_t = 5.30 - 0.36\log_2\mathrm{margin}_t - 0.09\log_2\mathrm{freq}_t$, so ``quantization deletes rare
+tokens'' is mostly ``quantization deletes low-margin predictions''---the matched-damage control that the tail-deletion
+literature usually lacks. Gaussian weight noise produces the same ordering (universality again), and at 2--3 bits every
+token flips regardless of margin, the joint-collapse regime where single-matrix damage stops being additive.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig10_token_margins.png}
+\caption{\textbf{GPT-2 small: which tokens break, by fp32 margin.} Left: probability that a correctly predicted token
+flips under joint per-channel RTN, by margin bin. Middle: mean per-token critical bit-width against $\log_2$ margin.
+Right: the same ordering under joint Gaussian weight noise.}
+\label{fig:tokens}
+\end{figure}
 
 \subsection{A calibration-free bit allocator}
 
@@ -400,7 +429,12 @@ repository; every model is a few seconds of compute and the full study runs in a
 \caption{E5: prefix fraction (top) and hard feature count (bottom) against bit-width under power-law importance.}
 \label{fig:e5}
 \end{figure}
-%E2FIG%
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{fig5_lattice.png}
+\caption{E2: retention against bit-width for the four quantizers under QAT, and $b_{\mathrm{crit}}$ by quantizer.}
+\label{fig:e2}
+\end{figure}
 \paragraph{Deviations from the preregistration.} D1 (after E0, fp32 only): the hard count $N_{\mathrm{ret}}$ is degenerate
 under uniform importance; retention made continuous. D2 (after the sizing pilot, before E1/E3 were analysed): the
 gate-2 pilot rejected the $F$-dependence; the corrected derivation and its decision rule were recorded. D3 (after the

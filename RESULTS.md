@@ -146,7 +146,19 @@ is therefore the wrong frame for uniform importance; the right frame is uniform 
 directions by the same relative perturbation. The importance-ordered case is E5.
 
 ## E2 — lattice controls under QAT
-%E2%
+QAT with the alternative quantizers (m = 16, n/m ∈ {8, 32, 128}, p ∈ {0.005, 0.02}, b ∈ {2 … 8, ∞}, 2 seeds, 348
+models). Paired difference in b_crit (R_live 95 %) against the shared-lattice uniform quantizer of the same (config, seed):
+
+| quantizer | Δb_crit vs uniform (mean ± SEM, n = 12) | slope vs log2 F |
+|---|---|---|
+| dithered lattice (per-element offset) | **+0.27 ± 0.13** (worse) | −0.11 [−0.25, 0.04] |
+| stochastic rounding | **+0.63 ± 0.11** (worse) | +0.00 [−0.23, 0.25] |
+| per-channel scale | **−0.54 ± 0.09** (better) | −0.30 [−0.49, −0.09] |
+| uniform (reference) | 0 | −0.25 [−0.41, −0.09] |
+
+Same ordering and magnitudes as post-training (E3: dither 0.2–1.5 bits worse, per-channel 0.4–0.5 better). Models do
+exploit the shared lattice — but what they exploit is its exact zero (dead columns stay dead), not fine alignment;
+stochastic rounding, which never lets a weight settle, is the worst of all. `figs/fig5_lattice.png`.
 
 ## E5 — importance ordering (power-law importance)
 Power-law importance I_i = (i+1)^−α, α ∈ {0.5, 1, 2}, m = 16, n ∈ {128, 512}, p ∈ {0.005, 0.02}, all bit-widths, 4 seeds
@@ -226,6 +238,35 @@ mlp.c_proj (κ = 158–186, > 0.05 nats even at 6 bits) and block-0 attn.c_proj 
 projections are the most noise-tolerant (σ_crit ≈ 0.7) yet not the easiest to quantize — which is exactly the
 κ-vs-σ_crit distinction the corrected law makes.
 
+## §5D — GPT-2: which tokens break first, and at how many bits (the per-feature law in a real LM)
+All 48 matrices quantized jointly (per-channel RTN, b ∈ {2, 3, 4, 5, 6, 8}) or perturbed jointly with Gaussian noise
+(σ_rel ∈ {0.03 … 0.4}), on 49,104 held-out WikiText-2 tokens (offset 147,456; fp32 NLL 3.425, top-1 accuracy 0.376).
+For every token the fp32 model predicts correctly (n = 18,464) we record its fp32 logit margin (correct logit minus the
+runner-up) and whether its prediction survives each condition. `src/lm_tokens.py`, `src/analysis_tokens.py`,
+`figs/fig10_token_margins.png`, `results/lm_tokens_margin_bins.csv`.
+
+| fp32 margin (log2 bins, logits) | n | mean critical bits | P(flip) 4-bit | 5-bit | 6-bit | 8-bit |
+|---|---|---|---|---|---|---|
+| < 1/8 | 372 | 6.30 (7 % never) | 0.58 | 0.52 | 0.36 | 0.07 |
+| 1/8–1/4 | 752 | 5.86 | 0.58 | 0.42 | 0.27 | 0.02 |
+| 1/4–1/2 | 1516 | 5.11 | 0.49 | 0.30 | 0.10 | 0.00 |
+| 1/2–1 | 2869 | 4.41 | 0.35 | 0.11 | 0.02 | 0.00 |
+| 1–2 | 4383 | 4.00 | 0.20 | 0.02 | 0.00 | 0.00 |
+| 2–4 | 4655 | 3.89 | 0.09 | 0.00 | 0.00 | 0.00 |
+| 4–8 | 2823 | 3.92 | 0.03 | 0.00 | 0.00 | 0.00 |
+| > 8 | 743 | 3.60 | 0.005 | 0.00 | 0.00 | 0.00 |
+
+- Binned mean critical bit-width vs log2 margin: **slope −0.39, R² = 0.90** (per token: −0.34 [−0.35, −0.32], R² 0.23 —
+  individual tokens are noisy, the conditional mean is a law).
+- Margin, not rarity: b_crit = 5.30 − 0.36·log2 margin − 0.09·log2 frequency. The unigram-frequency coefficient is a
+  quarter of the margin's; "quantization deletes rare tokens" is mostly "quantization deletes low-margin predictions",
+  and rare tokens happen to have low margins. This is the matched-damage control the plan asked for in §5B.
+- Universality: Gaussian weight noise produces the same margin ordering (right panel); at 2–3 bits per-channel RTN
+  every token flips regardless of margin (joint collapse, ΔNLL > 4 nats) — the regime where the additivity of
+  single-matrix damage breaks down.
+- Same exponent family as the toy per-feature law (b_i = c − 0.52·log2 margin_i in variance units): the tail of the
+  margin distribution is what a given precision deletes, half a bit or so per doubling of the margin.
+
 ## Scoring PREDICTIONS.md
 | prediction | preregistered decision rule | outcome |
 |---|---|---|
@@ -235,7 +276,7 @@ projections are the most noise-tolerant (σ_crit ≈ 0.7) yet not the easiest to
 | P3: ordering preserved under quantization (power-law importance) | drop in prefix fraction < 0.10 at b ≥ 3 | **confirmed**: prefix-fraction drop ≤ 0.03 at every b ≥ 3 (bar: 0.10); per-feature b_i = c − 0.52·log2(margin_i), R² 0.68 |
 | E4: top-3 ρ unchanged (translation) | drop < 0.05 for b ≥ b_crit | **tilt, not translation** under uniform importance: the whole plateau moves |
 | E3: noise-like damage slope −½, structured ≈ 0 | | **all noise-like families ≈ 0** (+0.00 … +0.05); dropout +0.24; rank: catastrophic |
-| E2: Q vs dithered Q_u | no direction preregistered | shared lattice **better** (PTQ: dither costs 0.2–1.5 bits; QAT: %E2SHORT%) — because the lattice contains 0 |
+| E2: Q vs dithered Q_u | no direction preregistered | shared lattice **better** (PTQ: dither costs 0.2–1.5 bits; QAT: dither +0.27 ± 0.13 bits, stochastic +0.63 ± 0.11, per-channel −0.54 ± 0.09, paired n = 12) — because the lattice contains 0 |
 | §5A: log2 σ_crit vs log2 F̂ slope ∈ [−0.65, −0.35] | | **not**: +0.14 [−0.13, 0.35], R² 0.04 |
 | §5A: b_crit − log2 κ vs log2 F̂ slope ≈ ½ | | **not**: −0.17 [−0.37, 0.09] |
 | (D2, written before E1/E3) σ_crit flat in F; b_crit = const + log2 κ where κ cannot adapt | | **confirmed** (E3 slopes ≈ 0; E6/E1/GPT-2 κ slopes 0.63–0.72) |
