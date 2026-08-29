@@ -253,7 +253,7 @@ frequency adding nothing ($+0.02$). Gaussian noise gives the same curves in ever
 predicts which correct predictions a 4/5/6-bit model flips with ROC AUC $0.80$/$0.91$/$0.95$ (rarity: $0.60$/$0.56$/$0.57$); fp32
 magnitude predicts which SAE features are erased at 3/4/5 bits with AUC $0.87$/$0.91$/$0.94$ (frequency: at or below chance); the
 toy margin predicts which features need more than 4 bits with AUC $0.92$; the activation outlier ratio predicts which matrices need
-more than 5 activation bits with AUC $0.97$ (weight $\kappa$: $0.64$). None of this requires running the quantized model.
+more than 5 activation bits with AUC $0.97$ (weight $\kappa$: $0.64$). Once calibrated, these forecasts require only statistics from the fp32 model; quantized inference is not needed to identify vulnerable tokens, features, or matrices.
 
 
 
