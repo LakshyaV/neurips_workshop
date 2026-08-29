@@ -1,0 +1,9 @@
+=== E5_m16_n128: K=192 models, m=16, n=128, steps=6000, B=1024
+/Users/lakshya/Desktop/neurips workshop/superposition-precision/src/train.py:112: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /Users/runner/work/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:823.)
+  print(f"  [{exp} m={m} n={n} K={K}] step {step:5d} loss {float(loss):.4f} "
+  [E5 m=16 n=128 K=192] step     0 loss 6.2870 kappa(mean) 3.74  0s
+  [E5 m=16 n=128 K=192] step  1000 loss 2.6373 kappa(mean) 3.94  37s
+  [E5 m=16 n=128 K=192] step  2000 loss 2.4688 kappa(mean) 3.92  83s
+  [E5 m=16 n=128 K=192] step  3000 loss 2.5080 kappa(mean) 3.92  134s
+  [E5 m=16 n=128 K=192] step  4000 loss 2.5048 kappa(mean) 3.90  172s

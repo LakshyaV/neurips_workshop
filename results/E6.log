@@ -18,3 +18,7 @@ Consider using tensor.detach() first. (Triggered internally at /Users/runner/wor
   [E6 m=16 n=1024 K=256] step  3000 loss 1002.1566 kappa(mean) 3.63  345s
   [E6 m=16 n=1024 K=256] step  4000 loss 1014.4000 kappa(mean) 3.65  459s
   [E6 m=16 n=1024 K=256] step  5000 loss 1006.5219 kappa(mean) 3.66  571s
+  [E6 m=16 n=1024 K=256] step  5999 loss 991.3926 kappa(mean) 3.66  696s
+  done: train 696s, eval 80000 samples; N_ret by model: [0, 1, 18, 100, 0, 1, 54, 31, 0, 0, 50, 122, 0, 1, 40, 117]...
+=== E6_m16_n1024 done in 711s (total 1042s)
+ALL DONE

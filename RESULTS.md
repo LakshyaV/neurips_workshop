@@ -61,11 +61,89 @@ RTN b_crit (R_live 95 %) = 3.74–4.03 for all 16 (n, p) cells, no trend in F or
 Even the below-capacity n/m = 4 cells (all features live, ρ high) cross at 3.8 bits — the numpy pilot's "quantization
 does nothing below capacity" was an artefact of the hard count.
 
+
+## E3 — full (11 of 12 E1 groups, 44 cells, F = 4 → 56, both m)
+σ_crit at R_live = 0.95, slope of log2 σ_crit vs log2 F (preregistered −½ for noise-like families):
+RTN **+0.05** [0.05, 0.06] · per-channel +0.04 · dithered +0.02 · stochastic +0.03 · Gaussian **+0.00** [−0.00, 0.01] ·
+dropout +0.24 · rank truncation: no finite threshold (removing one of m directions costs > 5 % everywhere).
+On the bits axis, post-training: RTN b_crit slope +0.03 [0.02, 0.04] (mean 3.87, m = 10: 3.74–4.03; m = 16: 3.1–3.4 …
+per cell in `results/E3_bcrit_bits.csv`), per-channel −0.03, dithered −0.04, stochastic +0.07.
+σ_crit is ~1.2–1.3× larger at m = 16 than at m = 10 for every noise-like family (√(16/10) = 1.26): the dominant damage
+is the perturbation of each feature's own direction, whose relative size scales as σ_rel/√m — not cross-talk, which is
+what both the preregistered derivation and D2 assumed. `figs/fig3_anydamage_null.png`.
+
+## §5A′ — GPT-2, per-channel RTN
+With per-channel (per output column) scaling the pathology disappears and every matrix crosses ΔNLL = 0.05 at nearly the
+same width: b_crit,pc = 2.70 ± 0.33 bits (n = 43; range 2.0–3.4), uncorrelated with κ_eff (slope −0.01, R² = 0.00),
+per-tensor κ (R² = 0.00) or F̂ (R² = 0.00). Per-channel scaling equalises the layers. `figs/fig7b_lm_perchannel.png`.
+
+## §5C — mixed precision on GPT-2 (held-out 49k tokens, all 48 matrices quantized jointly, per-channel RTN)
+ΔNLL (nats) at equal parameter-weighted average bits; κ-rule = b_i = c + log2 κ_eff,i; law = per-matrix
+1 + log2(1 + κ_eff/(√12 σ_crit,i)) shifted to the budget; oracle = greedy on measured single-matrix sensitivities;
+random = the κ-rule's multiset of widths permuted. `results/lm_mixed.csv`, `figs/fig9_mixed_precision.png`.
+
+| avg bits | uniform | κ-rule | law (noise probe) | oracle | random ×3 |
+|---|---|---|---|---|---|
+| 3.5 | — | 3.56 | **1.86** | 2.08 | 3.6–4.1 |
+| 4.0 | **0.449** | 0.659 | 0.600 | 0.459 | 0.68–0.88 |
+| 4.5 | — | 0.274 | **0.190** | 0.183 | 0.26–0.33 |
+| 5.0 | **0.084** | 0.094 | 0.103 | 0.067 | 0.10–0.11 |
+
+Reading: once per-channel scaling has equalised the matrices (2.7 ± 0.3 bits), there is almost nothing left for mixed
+precision to exploit — uniform per-channel RTN is within 0.01–0.02 nats of the sensitivity oracle at 4 and 5 bits,
+and the calibration-free κ-rule does not beat uniform. Between integer budgets the noise-probe ("law") allocation
+matches the oracle (4.5 bits) or beats it (3.5 bits: the oracle's greedy step is coarse), and both beat random by 2×.
+Per-tensor mixed precision is not viable at these budgets at all: joint per-tensor damage is super-additive (all 48
+matrices at 6 bits: +4.6 nats vs 1.6 summed; at 8 bits still +0.14). The practical recommendation that follows from the
+law is therefore simple: **per-channel scaling removes the κ tax entirely; after it, per-layer bit allocation is
+second-order for GPT-2 small.**
+
 ## E1 — main sweep (QAT)
-%E1%
+1536 models (m ∈ {10, 16}, n/m ∈ {4 … 128}, p ∈ {0.002, 0.005, 0.02, 0.05}, b ∈ {2 … 8, ∞}, 4 seeds, 6000 steps, uniform
+importance). 40 of 48 (m, n, p) cells have an interpolable b_crit in all 4 seeds (the rest are censored at b ≤ 3 or have
+N_ret(∞) too small); F spans 4.0 → 56.5, κ (fp32 arm) 2.5 → 13.5, κ_live 2.4 → 3.1. `figs/fig1_bcrit_vs_F_R_live_95.png`,
+`figs/fig2_Nret_vs_bits.png`, `results/E1_bcrit_*.csv`.
+
+**P1 (slope of b_crit vs log2 F; preregistered ½, "dead" below 0.15):**
+
+| retention curve / threshold | slope | bootstrap 95 % CI (seeds) | R² | configs |
+|---|---|---|---|---|
+| R_live ≥ 0.95 (primary) | **−0.11** | [−0.12, −0.09] | 0.04 | 40 |
+| R_live ≥ 0.90 | −0.15 | [−0.16, −0.13] | 0.18 | 27 |
+| R_live ≥ 0.99 | +0.04 | [−0.01, +0.08] | 0.00 | 39 |
+| R_soft (all features) ≥ 0.95 | −0.02 | [−0.04, −0.01] | 0.01 | 38 |
+| preregistered hard count N_ret(ρ≥0.5), where defined | −0.27 | [−0.37, −0.15] | 0.07 | 19 |
+| hard count, ρ ≥ 0.25 / 0.75 | +0.32 / +0.05 | [0.10, 0.66] / [−0.64, 0.70] | 0.11 / 0.00 | 9 / 6 |
+| R_live ≥ 0.95 on the measured-residual axis b_eff | −0.27 | [−0.32, −0.17] | | 16 |
+
+Every definition lands in the "hypothesis dead" band or below; no CI comes near ½. The zero-parameter prediction
+1 + log2(1 + κ√(F/3)) vs measurement has slope 0.46, R² = 0.33 — its residual predictive power comes entirely from κ.
+
+**What does vary — and it is κ (P2):** b_crit ranges 3.1 → 5.2 bits across cells, and
+
+| regressor (40 cells) | slope | intercept | R² |
+|---|---|---|---|
+| log2 F | −0.11 | 4.47 | 0.04 |
+| **log2 κ (fp32 arm)** | **0.72** | 2.57 | **0.82** |
+| log2 ℓ (live fraction k/n) | −0.35 | 3.62 | 0.83 |
+| log2 κ_live | −1.58 | | 0.06 |
+| joint | b = 2.77 + 0.71·log2 κ − 0.05·log2 F | | |
+
+b_crit − log2 κ = 1.99 ± 0.31 over all 40 cells (middle panel of fig. 1). In E1, κ and the live fraction are collinear
+(κ = κ_live/√ℓ with κ_live ≈ 2.7 universal), so E6 is needed to separate them; it does (below).
+
+**QAT vs PTQ (36 shared cells):** mean b_crit 4.02 (QAT) vs 3.87 (PTQ RTN); the QAT − PTQ difference correlates
+0.89 with log2 κ — training through a per-tensor STE grid is *worse* than post-hoc rounding precisely when the tensor
+has large outliers / few live columns, and better only for dense tensors. Quantization-aware training does not remove
+the κ tax; per-channel scaling does (E3, GPT-2).
 
 ## E4 — translation vs tilt
-%E4%
+`figs/fig4_translation_vs_tilt.png`. Under uniform importance the ρ profile of the represented features is nearly flat
+(all live features share ρ within ±0.1), so quantization lowers the whole profile together (a tilt of the plateau, not a
+prefix truncation): the three best features of the fp32 model lose ρ at the same bit-widths as the median feature
+(top-3 ρ drops < 0.05 for b ≥ 5, 0.1–0.3 at b = 3, in every cell). "Capacity" (some features kept intact, others dropped)
+is therefore the wrong frame for uniform importance; the right frame is uniform degradation of all represented
+directions by the same relative perturbation. The importance-ordered case is E5.
 
 ## E2 — lattice controls under QAT
 %E2%
@@ -74,7 +152,21 @@ does nothing below capacity" was an artefact of the hard count.
 %E5%
 
 ## E6 — κ manipulation at fixed F
-%E6%
+Weight clipping at c·rms(W), c ∈ {2, 3, 4, ∞}, at fixed (m = 16, n ∈ {256, 1024}, p ∈ {0.005, 0.02}), 4 seeds each,
+QAT. κ of the fp32 arm moves from 7.1 → 2.0 (n = 1024, p = 0.02) while F changes by < 2× (in the opposite direction).
+`figs/fig8_kappa.png`, `results/E6_bcrit_by_kclip.csv`.
+
+| cell | κ = 2.0 | 3.0 | 4.0 | unclipped (κ) |
+|---|---|---|---|---|
+| n=1024, p=0.02 | 3.65 ± 0.13 | 3.94 ± 0.34 | 4.31 ± 0.13 | 4.69 ± 0.23 (κ = 7.1) |
+| n=1024, p=0.005 | 3.21 ± 0.14 | 3.89 ± 0.05 | 3.97 ± 0.05 | 3.97 ± 0.09 (κ = 4.2) |
+| n=256, p=0.02 | 3.48 ± 0.25 | 4.09 ± 0.20 | 4.11 ± 0.16 | 4.16 ± 0.21 (κ = 3.5) |
+| n=256, p=0.005 | censored | 3.32 ± 0.06 | 3.41 ± 0.11 | 3.42 ± 0.09 (κ = 2.8) |
+
+Pooled within-cell slope of b_crit on log2 κ (cell fixed effects, 15 points): **0.65, R² = 0.92**; per-cell slopes
+0.58 / 0.71 / 0.83 where κ spans ≥ 0.8 octave. P2's preregistered band was [0.7, 1.3]: the effect is real and causal, its
+size is ~⅔ of the naive prediction — the same sub-unit slope as GPT-2 (0.63) and E1 (0.72), because a tensor with fewer
+outliers is also less tolerant to relative perturbation (σ_crit ∝ κ^0.46 in GPT-2).
 
 ## §5A — GPT-2 small, per-matrix damage thresholds
 GPT-2 small (124M), 48 weight matrices (12 blocks × {c_attn, attn.c_proj, mlp.c_fc, mlp.c_proj}), embeddings excluded,
@@ -105,7 +197,18 @@ projections are the most noise-tolerant (σ_crit ≈ 0.7) yet not the easiest to
 κ-vs-σ_crit distinction the corrected law makes.
 
 ## Scoring PREDICTIONS.md
-%SCORE%
+| prediction | preregistered decision rule | outcome |
+|---|---|---|
+| P1: b_crit vs log2 F slope ½ | [0.40, 0.60] confirmed; [0.15, 0.35] other exponent; < 0.15 dead | **dead**: −0.11 [−0.12, −0.09] (QAT); +0.03 [0.02, 0.04] (PTQ); all thresholds/definitions < 0.15 |
+| P1 table of predicted b_crit (2.85 → 6.41 for F = 1 → 256) | | measured 3.1–5.2 with no F trend; predicted-vs-measured slope 0.46, R² 0.33 (κ carries it) |
+| P2: κ enters as log2 κ with slope 1 | slope ∈ [0.7, 1.3] confirmed; ≈ 0 no; between partial | **partial, strongly supported**: E6 causal slope 0.65 (R² 0.92); E1 0.72 (R² 0.82); GPT-2 0.63 (R² 0.53) |
+| P3: ordering preserved under quantization (power-law importance) | drop in prefix fraction < 0.10 at b ≥ 3 | %P3% |
+| E4: top-3 ρ unchanged (translation) | drop < 0.05 for b ≥ b_crit | **tilt, not translation** under uniform importance: the whole plateau moves |
+| E3: noise-like damage slope −½, structured ≈ 0 | | **all noise-like families ≈ 0** (+0.00 … +0.05); dropout +0.24; rank: catastrophic |
+| E2: Q vs dithered Q_u | no direction preregistered | shared lattice **better** (PTQ: dither costs 0.2–1.5 bits; QAT: %E2SHORT%) — because the lattice contains 0 |
+| §5A: log2 σ_crit vs log2 F̂ slope ∈ [−0.65, −0.35] | | **not**: +0.14 [−0.13, 0.35], R² 0.04 |
+| §5A: b_crit − log2 κ vs log2 F̂ slope ≈ ½ | | **not**: −0.17 [−0.37, 0.09] |
+| (D2, written before E1/E3) σ_crit flat in F; b_crit = const + log2 κ where κ cannot adapt | | **confirmed** (E3 slopes ≈ 0; E6/E1/GPT-2 κ slopes 0.63–0.72) |
 
 ## Things that went wrong and were fixed (audit trail)
 - The soft count clipped at 0 has a Monte-Carlo clipping bias when reference and damaged models are evaluated with
