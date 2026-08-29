@@ -13,7 +13,7 @@ with controls that separate "quantization" from "any damage", and a per-layer br
 - `src/sweep.py` experiment registry (E0, pilot, E1, E2, E5, E6); `src/damage.py` (E3, post-hoc)
 - `src/lm_eval.py` (§5A per-matrix sweeps), `src/lm_mixed.py` (§5C mixed precision), `src/lm_tokens.py` (§5D per-token critical bits)
 - `src/analysis.py`, `src/analysis2.py`, `src/analysis_lm.py`, `src/analysis_tokens.py` — b_crit extraction, seed-bootstrap fits, figures
-- `paper/main.tex` — the write-up (compile with `tectonic main.tex`)
+- `paper/main.tex` — v1 write-up (long form, 2023 style); `paper/main_v2.tex` — **v2: 4-page AXIOM/NeurIPS-2026-workshop submission** (anonymous, official `neurips_2026.sty`, checklist), compile with `tectonic main_v2.tex`
 - `tests/test_quant.py` (11 unit tests), `tests/crosscheck_numpy.py` (port vs numpy reference `tms_numpy_pilot.py`)
 - `results/*.parquet` one row per (model, feature); `results/ckpt/` weights; `figs/`
 

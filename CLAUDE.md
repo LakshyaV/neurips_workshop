@@ -9,7 +9,7 @@ tolerance σ*, not by F. Read in this order: `PREDICTIONS.md` (never edit), `DEV
 ## Environment
 - `source .venv/bin/activate && export PYTORCH_ENABLE_MPS_FALLBACK=1 HF_HUB_OFFLINE=1`
 - Python 3.12 venv (uv), torch 2.13 on Apple MPS, fp32 everywhere. GPT-2 weights are in the HF cache.
-- Compile the paper with `cd paper && tectonic main.tex` (style: `neurips_2023.sty`; swap in the workshop's style).
+- Papers: `paper/main.tex` (v1, long) and `paper/main_v2.tex` (v2, 4-page AXIOM submission, official `neurips_2026.sty` + checklist); compile with tectonic. Keep both.
 
 ## Layout
 - `src/quant.py` batched fake quantizers (per-model tensor `qmax`/`mode`, STE) + post-hoc damage ops
