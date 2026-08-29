@@ -81,3 +81,18 @@ the same matrix R² 0.12) is therefore reported as **exploratory / post-hoc exte
 **Also recorded here:** the per-token (§5D) and SAE-feature (§5E) analyses were added after the preregistered analyses
 (same day, before this review) and are labelled exploratory; the review-driven wording changes (universal → F-independent;
 non-circular statement of the κ-slope account; unbinned R² alongside binned) change no number.
+
+## D5 (2026-08-29 18:40, after the fourth external review; all other results already analysed)
+
+**Change:** the preregistered superposition proxy for GPT-2, F̂ = d_in/PR of the input covariance, is replaced as the primary
+real-model superposition measure by a direct per-block feature count, F_SAE = live features (≥ 20 firings on 49k tokens) of the
+public residual-stream sparse autoencoders (jbloom, 24,576 features at every block) divided by d_model = 768. Reason: F̂
+anticorrelates with F_SAE (r = −0.31 pooled over c_attn/c_fc inputs; −0.79 for c_fc), so it was not measuring what the
+preregistration assumed. F̂ results are still reported wherever they were preregistered (scoring table, per-matrix figure).
+
+**What the replacement shows, honestly:** log2 σ_crit vs log2 F_SAE over the 24 uncensored matrices reading each block's residual
+has raw slope +0.21 [0.03, 0.49] (block bootstrap). But F_SAE rises monotonically with depth (3.3 → 23.3 from block 1 to 9) and
+depth alone explains R² = 0.32 of σ_crit; partialling out block index gives −0.33 (R² 0.11), and within-band slopes are
+inconsistent (−0.18 in blocks 0–5, +0.91 in 4–11). With 12 blocks the F-dependence in GPT-2 is therefore **not identifiable
+separately from depth**: no negative dependence is observed, and the sign is undetermined. This is reported as inconclusive,
+not as a null. Post hoc; not preregistered coverage.
