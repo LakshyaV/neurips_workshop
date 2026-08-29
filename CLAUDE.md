@@ -37,3 +37,5 @@ tolerance σ*, not by F. Read in this order: `PREDICTIONS.md` (never edit), `DEV
 - `Series.sem` is a pandas method — use `df["sem"]`.
 - Per-tensor RTN on GPT-2's κ ≈ 160–190 matrices is pathological (non-monotone in bits, super-additive across
   matrices); use per-channel scaling for anything joint.
+- Git: always create the branch BEFORE committing; never `git checkout -B main origin/main` while a local commit is not on
+  a pushed branch (it orphans the commit and deletes its files from the working tree; recover via `git reflog`).
