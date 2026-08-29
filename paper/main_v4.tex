@@ -154,7 +154,7 @@ does not depend on how densely features are packed.
 \label{sec:methods}
 
 Predictions, decision bands, fit rules and controls were committed before any experiment ran (design: Figure~\ref{fig:design},
-appendix); every later analysis change is a dated deviation-log entry (D1--D4, Appendix~\ref{app:score}) written before the
+appendix); every later analysis change is a dated deviation-log entry (D1--D5, Appendix~\ref{app:score}) written before the
 affected results were inspected.
 
 
@@ -305,8 +305,9 @@ Deviations (dated in the repository): D1, after the fp32-only gate, the hard cou
 pilot and before the main sweep, the corrected derivation and its decision rule; D3, after a pilot damage run, clipping
 bias and dead-feature accounting fixed by $R_{\mathrm{live}}$ with paired evaluation; D4, after an external review of the
 draft, the activation arm added as a post-hoc application of P2's functional form to a new quantity (not preregistered
-coverage), and the per-token and SAE analyses recorded as exploratory; D5, after a further review, the preregistered proxy $\hat F$ replaced
-by per-block SAE feature counts for the GPT-2 superposition test, reported as inconclusive because count and depth are collinear.
+coverage), and the per-token and SAE analyses recorded as exploratory; D5, after further review, a post-hoc direct SAE feature-count analysis was added because the preregistered covariance
+proxy $\hat F$ anticorrelates with SAE feature counts; the preregistered $\hat F$ analyses remain reported and scored, and the SAE
+analysis is reported separately and is inconclusive because feature count and depth are collinear.
 
 \section{Methods details}
 \label{app:methods}
