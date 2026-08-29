@@ -19,8 +19,8 @@
 \setlength{\textfloatsep}{3pt}\setlength{\intextsep}{3pt}\setlength{\floatsep}{3pt}
 \setlength{\abovedisplayskip}{3pt}\setlength{\belowdisplayskip}{3pt}\setlength{\abovedisplayshortskip}{2pt}\setlength{\belowdisplayshortskip}{2pt}
 \makeatletter
-\renewcommand\section{\@startsection{section}{1}{\z@}{-0.9ex \@plus -0.3ex \@minus -0.2ex}{0.45ex \@plus 0.1ex}{\large\bfseries\raggedright}}
-\renewcommand\subsection{\@startsection{subsection}{2}{\z@}{-0.6ex \@plus -0.3ex \@minus -0.2ex}{0.3ex \@plus 0.1ex}{\normalsize\bfseries\raggedright}}
+\renewcommand\section{\@startsection{section}{1}{\z@}{-1.0ex \@plus -0.3ex \@minus -0.2ex}{0.5ex \@plus 0.1ex}{\large\bfseries\raggedright}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}{-0.7ex \@plus -0.3ex \@minus -0.2ex}{0.35ex \@plus 0.1ex}{\normalsize\bfseries\raggedright}}
 \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{0.8ex \@plus 0.3ex \@minus 0.2ex}{-1em}{\normalsize\bfseries}}
 \makeatother
 \setlist{nosep,leftmargin=1.2em}
@@ -87,7 +87,7 @@ models~\cite{hooker2019,hooker2020}.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.78\linewidth]{fig_hero.png}
+\includegraphics[width=0.80\linewidth]{fig_hero.png}
 \caption{\textbf{Overview of the three main results.} \textbf{(a)} Critical bit-width (RTN, QAT, 95\,\% retention; mean $\pm$ SD over 4 seeds) against measured
 features-per-dimension for the main sweep, with the preregistered law. \textbf{(b)} $b_{\mathrm{crit}}$ against
 $\log_2\kappa$: toy models with $\kappa$ moved by weight clipping at fixed configuration, and GPT-2's 48 matrices (each
