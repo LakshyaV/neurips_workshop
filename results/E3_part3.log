@@ -1,0 +1,9 @@
+=== results/ckpt/E1_m10_n1280.pt
+  E1_m10_n1280 ptq_uniform: 8 levels x 16 models in 13s; N_ret range 0..72
+  E1_m10_n1280 ptq_dither: 15 levels x 16 models in 21s; N_ret range 0..70
+  E1_m10_n1280 ptq_perchannel: 8 levels x 16 models in 8s; N_ret range 0..72
+  E1_m10_n1280 ptq_stochastic: 15 levels x 16 models in 14s; N_ret range 0..70
+  E1_m10_n1280 gaussian: 33 levels x 16 models in 34s; N_ret range 0..72
+  E1_m10_n1280 rank: 11 levels x 16 models in 11s; N_ret range 0..70
+  E1_m10_n1280 dropout: 21 levels x 16 models in 20s; N_ret range 0..72
+ALL DONE

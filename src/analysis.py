@@ -89,13 +89,11 @@ def crossing(xs, ys, target, xmin=FIT_BITS[0], xmax=FIT_BITS[1]):
 
 
 def bcrit_table(s, curve="R_soft", frac=0.95, axis="bits", arm_cols=("mode",), extra_keys=()):
-    """One row per (config, seed, arm): b_crit on `axis` from `curve`."""
+    """One row per (config, seed, arm): b_crit on `axis` from `curve` (vectorised: no per-group table scans)."""
     keys = CFG + list(arm_cols) + list(extra_keys)
+    q = s[~np.isinf(s.bits) & s[curve].notna()]
     rows = []
-    for k, g in s[~np.isinf(s.bits)].groupby(keys, sort=False):
-        ref = s[(s[CFG] == pd.Series(dict(zip(CFG, k[:len(CFG)])))).all(axis=1) & np.isinf(s.bits) & (s["mode"] == 0)]
-        if len(ref) == 0 or g[curve].isna().all():
-            continue
+    for k, g in q.groupby(keys, sort=False):
         bc, cen = crossing(g[axis].values, g[curve].values, frac)
         r = dict(zip(keys, k)); r.update(b_crit=bc, censor=cen, F=g.F.iloc[0], F_soft=g.F_soft.iloc[0],
                                          kappa_inf=g.kappa_inf.iloc[0], live_inf=g.live_inf.iloc[0], soft_inf=g.soft_inf.iloc[0])
@@ -125,32 +123,33 @@ def ols(x, y):
 
 
 def fit_slope_bootstrap(tab, xcol="F", ycol="b_crit", nboot=1000, seed=0, min_ok=None, keys=("m", "n", "p", "alpha", "kclip", "mode")):
-    """OLS of mean-over-seeds b_crit on log2 x, configs with all seeds 'ok'; bootstrap over seeds."""
+    """OLS of mean-over-seeds b_crit on log2 x over configs whose seeds are all 'ok'; bootstrap over seeds (numpy)."""
     keys = [k for k in keys if k in tab.columns]
-    seeds = sorted(tab.seed.unique())
+    seeds = sorted(tab.seed.unique()); S = len(seeds)
     cm = config_means(tab, keys)
-    min_ok = len(seeds) if min_ok is None else min_ok
+    min_ok = S if min_ok is None else min_ok
     use = cm[(cm.n_ok >= min_ok)]
     if len(use) < 3:
-        return dict(slope=np.nan, lo=np.nan, hi=np.nan, intercept=np.nan, r2=np.nan, n_cfg=len(use))
+        return dict(slope=np.nan, lo=np.nan, hi=np.nan, intercept=np.nan, r2=np.nan, n_cfg=len(use), bs_sd=np.nan)
     slope, icpt, r2 = ols(np.log2(use[xcol]), use[ycol])
-    ok = tab[tab.censor == "ok"].set_index(keys)
-    rng = np.random.default_rng(seed)
-    bs = []
-    cfg_idx = use.set_index(keys).index
+    # matrices [config, seed] of b_crit and x (NaN where censored)
+    ok = tab[tab.censor == "ok"].set_index(keys + ["seed"])
+    cfgs = [tuple(r) for r in use[keys].itertuples(index=False)]
+    B = np.full((len(cfgs), S), np.nan); X = np.full((len(cfgs), S), np.nan)
+    for ci, cfg in enumerate(cfgs):
+        for si, sd in enumerate(seeds):
+            key = cfg + (sd,)
+            if key in ok.index:
+                r = ok.loc[key]
+                B[ci, si] = float(np.atleast_1d(r[ycol])[0]); X[ci, si] = float(np.atleast_1d(r[xcol])[0])
+    rng = np.random.default_rng(seed); bs = []
     for _ in range(nboot):
-        pick = rng.choice(seeds, size=len(seeds), replace=True)
-        xs, ys = [], []
-        for cfg in cfg_idx:
-            sub = ok.loc[[cfg]] if cfg in ok.index else None
-            if sub is None:
-                continue
-            vals = pd.concat([sub[sub.seed == sd] for sd in pick])
-            if len(vals) == 0:
-                continue
-            xs.append(np.log2(vals[xcol].mean())); ys.append(vals[ycol].mean())
-        if len(xs) >= 3:
-            bs.append(ols(xs, ys)[0])
+        pick = rng.integers(0, S, S)
+        with np.errstate(all="ignore"):
+            y = np.nanmean(B[:, pick], axis=1); x = np.log2(np.nanmean(X[:, pick], axis=1))
+        msk = np.isfinite(y) & np.isfinite(x)
+        if msk.sum() >= 3:
+            bs.append(ols(x[msk], y[msk])[0])
     bs = np.array(bs)
     return dict(slope=slope, lo=np.nanpercentile(bs, 2.5), hi=np.nanpercentile(bs, 97.5), intercept=icpt, r2=r2,
                 n_cfg=len(use), bs_sd=bs.std())

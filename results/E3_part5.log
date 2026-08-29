@@ -1,0 +1,25 @@
+=== results/ckpt/E1_m16_n128.pt
+  E1_m16_n128 ptq_uniform: 8 levels x 16 models in 1s; N_ret range 0..128
+  E1_m16_n128 ptq_dither: 15 levels x 16 models in 2s; N_ret range 0..128
+  E1_m16_n128 ptq_perchannel: 8 levels x 16 models in 1s; N_ret range 0..128
+  E1_m16_n128 ptq_stochastic: 15 levels x 16 models in 2s; N_ret range 0..128
+  E1_m16_n128 gaussian: 33 levels x 16 models in 5s; N_ret range 0..128
+  E1_m16_n128 rank: 17 levels x 16 models in 3s; N_ret range 0..128
+  E1_m16_n128 dropout: 21 levels x 16 models in 3s; N_ret range 6..128
+=== results/ckpt/E1_m16_n256.pt
+  E1_m16_n256 ptq_uniform: 8 levels x 16 models in 3s; N_ret range 0..256
+  E1_m16_n256 ptq_dither: 15 levels x 16 models in 4s; N_ret range 0..256
+  E1_m16_n256 ptq_perchannel: 8 levels x 16 models in 2s; N_ret range 0..256
+  E1_m16_n256 ptq_stochastic: 15 levels x 16 models in 3s; N_ret range 0..256
+  E1_m16_n256 gaussian: 33 levels x 16 models in 6s; N_ret range 0..256
+  E1_m16_n256 rank: 17 levels x 16 models in 3s; N_ret range 0..256
+  E1_m16_n256 dropout: 21 levels x 16 models in 4s; N_ret range 0..256
+=== results/ckpt/E1_m16_n512.pt
+  E1_m16_n512 ptq_uniform: 8 levels x 16 models in 3s; N_ret range 0..91
+  E1_m16_n512 ptq_dither: 15 levels x 16 models in 5s; N_ret range 0..91
+  E1_m16_n512 ptq_perchannel: 8 levels x 16 models in 3s; N_ret range 0..91
+  E1_m16_n512 ptq_stochastic: 15 levels x 16 models in 13s; N_ret range 0..91
+  E1_m16_n512 gaussian: 33 levels x 16 models in 16s; N_ret range 0..92
+  E1_m16_n512 rank: 17 levels x 16 models in 23s; N_ret range 0..91
+  E1_m16_n512 dropout: 21 levels x 16 models in 24s; N_ret range 0..181
+ALL DONE

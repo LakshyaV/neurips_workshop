@@ -1,0 +1,9 @@
+E1 R_live_95: slope -0.109 [-0.124,-0.086] R²=0.04 n_cfg=40 | κ-corr slope -0.031 [-0.061,-0.003]
+E1 R_live_90: slope -0.145 [-0.162,-0.130] R²=0.18 n_cfg=27 | κ-corr slope 0.068 [0.040,0.085]
+E1 R_live_99: slope 0.043 [-0.013,0.076] R²=0.00 n_cfg=39 | κ-corr slope -0.030 [-0.067,-0.005]
+E1 R_soft_95: slope -0.023 [-0.040,-0.006] R²=0.01 n_cfg=38 | κ-corr slope 0.029 [0.022,0.037]
+E1 R_softc_95: slope -0.006 [-0.024,0.008] R²=0.00 n_cfg=38 | κ-corr slope 0.045 [0.038,0.053]
+E1 R_hard_95: slope -0.269 [-0.365,-0.152] R²=0.07 n_cfg=19 | κ-corr slope 0.518 [0.417,0.664]
+E1 R_hard25_95: slope 0.318 [0.097,0.656] R²=0.11 n_cfg=9 | κ-corr slope 0.191 [-0.020,0.482]
+E1 R_hard75_95: slope 0.048 [-0.644,0.695] R²=0.00 n_cfg=6 | κ-corr slope 0.022 [-0.727,0.714]
+E1 R_live_95 on b_eff axis: slope -0.265 [-0.323,-0.167] n_cfg=16

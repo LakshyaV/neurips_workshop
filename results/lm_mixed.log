@@ -1,0 +1,30 @@
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 9151.66it/s]
+kappa_eff range 3.41 8.89 | law b_crit range 2.26 4.62
+held-out clean NLL 3.2595 on 49152 tokens (offset 98304)
+  kappa      budget 3.50 avg_bits 3.486  ΔNLL +3.5573
+  law        budget 3.50 avg_bits 3.479  ΔNLL +1.8648
+  oracle     budget 3.50 avg_bits 3.500  ΔNLL +2.0779
+  random0    budget 3.50 avg_bits 3.431  ΔNLL +4.0784
+  random1    budget 3.50 avg_bits 3.417  ΔNLL +3.8945
+  random2    budget 3.50 avg_bits 3.333  ΔNLL +3.5672
+  uniform    budget 4.00 avg_bits 4.000  ΔNLL +0.4494
+  kappa      budget 4.00 avg_bits 4.000  ΔNLL +0.6587
+  law        budget 4.00 avg_bits 3.993  ΔNLL +0.6001
+  oracle     budget 4.00 avg_bits 4.000  ΔNLL +0.4593
+  random0    budget 4.00 avg_bits 3.958  ΔNLL +0.8774
+  random1    budget 4.00 avg_bits 3.993  ΔNLL +0.7814
+  random2    budget 4.00 avg_bits 4.014  ΔNLL +0.6793
+  kappa      budget 4.50 avg_bits 4.486  ΔNLL +0.2737
+  law        budget 4.50 avg_bits 4.479  ΔNLL +0.1896
+  oracle     budget 4.50 avg_bits 4.500  ΔNLL +0.1832
+  random0    budget 4.50 avg_bits 4.417  ΔNLL +0.2604
+  random1    budget 4.50 avg_bits 4.389  ΔNLL +0.3273
+  random2    budget 4.50 avg_bits 4.410  ΔNLL +0.3143
+  uniform    budget 5.00 avg_bits 5.000  ΔNLL +0.0843
+  kappa      budget 5.00 avg_bits 5.000  ΔNLL +0.0938
+  law        budget 5.00 avg_bits 4.986  ΔNLL +0.1034
+  oracle     budget 5.00 avg_bits 5.000  ΔNLL +0.0668
+  random0    budget 5.00 avg_bits 5.049  ΔNLL +0.1073
+  random1    budget 5.00 avg_bits 5.000  ΔNLL +0.0975
+  random2    budget 5.00 avg_bits 4.965  ΔNLL +0.1059
+ALL DONE

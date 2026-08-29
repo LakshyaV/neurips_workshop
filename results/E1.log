@@ -53,3 +53,72 @@ Consider using tensor.detach() first. (Triggered internally at /Users/runner/wor
 === E1_m10_n640 done in 985s (total 2095s)
 === E1_m10_n1280: K=128 models, m=10, n=1280, steps=6000, B=512
   [E1 m=10 n=1280 K=128] step     0 loss 1025.7457 kappa(mean) 4.04  0s
+  [E1 m=10 n=1280 K=128] step  1000 loss 1004.5336 kappa(mean) 7.23  190s
+  [E1 m=10 n=1280 K=128] step  2000 loss 998.9399 kappa(mean) 7.65  341s
+  [E1 m=10 n=1280 K=128] step  3000 loss 997.9663 kappa(mean) 7.83  531s
+  [E1 m=10 n=1280 K=128] step  4000 loss 994.0046 kappa(mean) 7.92  722s
+  [E1 m=10 n=1280 K=128] step  5000 loss 1000.7792 kappa(mean) 7.93  915s
+  [E1 m=10 n=1280 K=128] step  5999 loss 998.6072 kappa(mean) 7.93  1106s
+  done: train 1106s, eval 199999 samples; N_ret by model: [104, 11, 77, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]...
+=== E1_m10_n1280 done in 1144s (total 3239s)
+=== E1_m16_n64: K=128 models, m=16, n=64, steps=6000, B=1024
+  [E1 m=16 n=64 K=128] step     0 loss 38.3457 kappa(mean) 3.54  0s
+  [E1 m=16 n=64 K=128] step  1000 loss 14.4055 kappa(mean) 2.97  22s
+  [E1 m=16 n=64 K=128] step  2000 loss 13.1698 kappa(mean) 2.99  43s
+  [E1 m=16 n=64 K=128] step  3000 loss 13.8235 kappa(mean) 3.01  64s
+  [E1 m=16 n=64 K=128] step  4000 loss 13.3470 kappa(mean) 3.01  78s
+  [E1 m=16 n=64 K=128] step  5000 loss 13.4774 kappa(mean) 3.02  85s
+  [E1 m=16 n=64 K=128] step  5999 loss 12.8985 kappa(mean) 3.02  93s
+  done: train 93s, eval 199999 samples; N_ret by model: [32, 24, 29, 27, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64]...
+=== E1_m16_n64 done in 94s (total 3333s)
+=== E1_m16_n128: K=128 models, m=16, n=128, steps=6000, B=1024
+  [E1 m=16 n=128 K=128] step     0 loss 84.5057 kappa(mean) 3.74  0s
+  [E1 m=16 n=128 K=128] step  1000 loss 59.0145 kappa(mean) 2.99  14s
+  [E1 m=16 n=128 K=128] step  2000 loss 57.6643 kappa(mean) 3.06  28s
+  [E1 m=16 n=128 K=128] step  3000 loss 57.5932 kappa(mean) 3.08  42s
+  [E1 m=16 n=128 K=128] step  4000 loss 57.0931 kappa(mean) 3.08  56s
+  [E1 m=16 n=128 K=128] step  5000 loss 57.7533 kappa(mean) 3.09  71s
+  [E1 m=16 n=128 K=128] step  5999 loss 56.9719 kappa(mean) 3.09  86s
+  done: train 86s, eval 199999 samples; N_ret by model: [31, 31, 31, 32, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128]...
+=== E1_m16_n128 done in 87s (total 3420s)
+=== E1_m16_n256: K=128 models, m=16, n=256, steps=6000, B=1024
+  [E1 m=16 n=256 K=128] step     0 loss 186.3439 kappa(mean) 3.84  0s
+  [E1 m=16 n=256 K=128] step  1000 loss 160.9653 kappa(mean) 3.29  28s
+  [E1 m=16 n=256 K=128] step  2000 loss 157.8837 kappa(mean) 3.47  55s
+  [E1 m=16 n=256 K=128] step  3000 loss 156.5726 kappa(mean) 3.52  83s
+  [E1 m=16 n=256 K=128] step  4000 loss 158.3588 kappa(mean) 3.56  110s
+  [E1 m=16 n=256 K=128] step  5000 loss 158.1781 kappa(mean) 3.57  138s
+  [E1 m=16 n=256 K=128] step  5999 loss 155.2895 kappa(mean) 3.57  165s
+  done: train 165s, eval 199999 samples; N_ret by model: [43, 32, 32, 6, 256, 254, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256]...
+=== E1_m16_n256 done in 168s (total 3588s)
+=== E1_m16_n512: K=128 models, m=16, n=512, steps=6000, B=1024
+  [E1 m=16 n=512 K=128] step     0 loss 393.8828 kappa(mean) 3.90  0s
+  [E1 m=16 n=512 K=128] step  1000 loss 365.1971 kappa(mean) 4.08  55s
+  [E1 m=16 n=512 K=128] step  2000 loss 362.3649 kappa(mean) 4.35  110s
+  [E1 m=16 n=512 K=128] step  3000 loss 360.9492 kappa(mean) 4.44  165s
+  [E1 m=16 n=512 K=128] step  4000 loss 360.6306 kappa(mean) 4.47  220s
+  [E1 m=16 n=512 K=128] step  5000 loss 360.2242 kappa(mean) 4.48  274s
+  [E1 m=16 n=512 K=128] step  5999 loss 362.3550 kappa(mean) 4.48  329s
+  done: train 329s, eval 199999 samples; N_ret by model: [114, 71, 47, 97, 6, 5, 10, 9, 5, 4, 7, 2, 5, 2, 4, 3]...
+=== E1_m16_n512 done in 334s (total 3922s)
+=== E1_m16_n1024: K=128 models, m=16, n=1024, steps=6000, B=512
+  [E1 m=16 n=1024 K=128] step     0 loss 810.3225 kappa(mean) 4.04  0s
+  [E1 m=16 n=1024 K=128] step  1000 loss 777.1314 kappa(mean) 5.49  56s
+  [E1 m=16 n=1024 K=128] step  2000 loss 773.2394 kappa(mean) 5.76  112s
+  [E1 m=16 n=1024 K=128] step  3000 loss 769.6025 kappa(mean) 5.87  168s
+  [E1 m=16 n=1024 K=128] step  4000 loss 768.3275 kappa(mean) 5.94  283s
+  [E1 m=16 n=1024 K=128] step  5000 loss 769.9684 kappa(mean) 5.97  340s
+  [E1 m=16 n=1024 K=128] step  5999 loss 773.3816 kappa(mean) 5.97  475s
+  done: train 475s, eval 199999 samples; N_ret by model: [211, 71, 189, 161, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]...
+=== E1_m16_n1024 done in 512s (total 4435s)
+=== E1_m16_n2048: K=128 models, m=16, n=2048, steps=6000, B=512
+  [E1 m=16 n=2048 K=128] step     0 loss 1641.2592 kappa(mean) 4.38  2s
+  [E1 m=16 n=2048 K=128] step  1000 loss 1604.1322 kappa(mean) 7.85  265s
+  [E1 m=16 n=2048 K=128] step  2000 loss 1591.5997 kappa(mean) 8.22  526s
+  [E1 m=16 n=2048 K=128] step  3000 loss 1591.8605 kappa(mean) 8.35  843s
+  [E1 m=16 n=2048 K=128] step  4000 loss 1587.9463 kappa(mean) 8.44  1046s
+  [E1 m=16 n=2048 K=128] step  5000 loss 1591.3361 kappa(mean) 8.47  1162s
+  [E1 m=16 n=2048 K=128] step  5999 loss 1590.0076 kappa(mean) 8.47  1275s
+  done: train 1275s, eval 199999 samples; N_ret by model: [198, 139, 92, 153, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]...
+=== E1_m16_n2048 done in 1298s (total 5733s)
+ALL DONE

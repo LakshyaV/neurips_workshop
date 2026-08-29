@@ -85,6 +85,7 @@ def main():
     ap.add_argument("--device", default="mps")
     ap.add_argument("--sigmas", default="0.03,0.045,0.07,0.1,0.15,0.22,0.33,0.5,0.75")
     ap.add_argument("--bits", default="3,4,5,6")
+    ap.add_argument("--families", default="gaussian,rtn", help="subset of gaussian,rtn,rtn_pc")
     ap.add_argument("--blocks", default=None, help="comma list of block indices (default all)")
     ap.add_argument("--out", default=os.path.join(RES, "lm_layers.parquet"))
     args = ap.parse_args()
@@ -119,15 +120,23 @@ def main():
             rms = W0.pow(2).mean().sqrt().item(); amax = W0.abs().max().item()
             kappa = amax / rms
             d_in = W0.shape[0]
-            base = dict(block=L, matrix=name, d_in=d_in, d_out=W0.shape[1], kappa=kappa, rms=rms, amax=amax,
+            amax_c = W0.abs().amax(dim=0, keepdim=True)                      # per output channel (Conv1D: [in, out])
+            n2_c = W0.pow(2).sum(dim=0, keepdim=True); rms_c = (n2_c / W0.shape[0]).sqrt()
+            kappa_eff = float(((amax_c / rms_c) ** 2 * n2_c).sum().sqrt() / n2_c.sum().sqrt())   # norm-weighted per-channel κ
+            base = dict(block=L, matrix=name, d_in=d_in, d_out=W0.shape[1], kappa=kappa, kappa_eff=kappa_eff, rms=rms, amax=amax,
                         PR=pr[(L, name)], F_hat=d_in / pr[(L, name)], n_tokens=nseq * args.seqlen)
-            levels = [("gaussian", s) for s in sigmas] + [("rtn", b) for b in bits]
+            fams = args.families.split(",")
+            levels = ([("gaussian", s) for s in sigmas] if "gaussian" in fams else []) + \
+                     ([("rtn", b) for b in bits] if "rtn" in fams else []) + ([("rtn_pc", b) for b in bits] if "rtn_pc" in fams else [])
             for fam, knob in levels:
                 if fam == "gaussian":
                     z = torch.randn(W0.shape, generator=gen).to(device)
                     Wd = W0 + knob * rms * z
-                else:
+                elif fam == "rtn":
                     qmax = 2 ** (knob - 1) - 1; s = amax / qmax
+                    Wd = torch.clamp(torch.round(W0 / s), -qmax, qmax) * s
+                else:
+                    qmax = 2 ** (knob - 1) - 1; s = (amax_c / qmax).clamp_min(1e-12)
                     Wd = torch.clamp(torch.round(W0 / s), -qmax, qmax) * s
                 sig_rel = ((Wd - W0).pow(2).mean().sqrt() / rms).item()
                 mod.weight.copy_(Wd)
