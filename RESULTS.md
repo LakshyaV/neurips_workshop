@@ -86,7 +86,7 @@ per-tensor κ (R² = 0.00) or F̂ (R² = 0.00). Per-channel scaling equalises th
 1 + log2(1 + κ_eff/(√12 σ_crit,i)) shifted to the budget; oracle = greedy on measured single-matrix sensitivities;
 random = the κ-rule's multiset of widths permuted. `results/lm_mixed.csv`, `figs/fig9_mixed_precision.png`.
 
-| avg bits | uniform | κ-rule | law (noise probe) | oracle | random ×3 |
+| avg bits | uniform | κ-rule | law (noise probe) | sensitivity-greedy (single-matrix ΔNLL, additivity assumed) | random ×3 |
 |---|---|---|---|---|---|
 | 3.5 | — | 3.56 | **1.86** | 2.08 | 3.6–4.1 |
 | 4.0 | **0.449** | 0.659 | 0.600 | 0.459 | 0.68–0.88 |
@@ -94,13 +94,13 @@ random = the κ-rule's multiset of widths permuted. `results/lm_mixed.csv`, `fig
 | 5.0 | **0.084** | 0.094 | 0.103 | 0.067 | 0.10–0.11 |
 
 Reading: once per-channel scaling has equalised the matrices (2.7 ± 0.3 bits), there is almost nothing left for mixed
-precision to exploit — uniform per-channel RTN is within 0.01–0.02 nats of the sensitivity oracle at 4 and 5 bits,
+precision to exploit — uniform per-channel RTN is within 0.01–0.02 nats of the sensitivity-greedy allocation at 4 and 5 bits (it is not an oracle: it assumes single-matrix damages add, and loses to the noise-probe law at 3.5 bits and to uniform at 4.0),
 and the calibration-free κ-rule does not beat uniform. Between integer budgets the noise-probe ("law") allocation
 matches the oracle (4.5 bits) or beats it (3.5 bits: the oracle's greedy step is coarse), and both beat random by 2×.
 Per-tensor mixed precision is not viable at these budgets at all: joint per-tensor damage is super-additive (all 48
 matrices at 6 bits: +4.6 nats vs 1.6 summed; at 8 bits still +0.14). The practical recommendation that follows from the
 law is therefore simple: **per-channel scaling removes the κ tax entirely; after it, per-layer bit allocation is
-second-order for GPT-2 small.**
+second-order for GPT-2 small** (a statement about this model and quantizer, not about mixed precision in general).
 
 ## E1 — main sweep (QAT)
 1536 models (m ∈ {10, 16}, n/m ∈ {4 … 128}, p ∈ {0.002, 0.005, 0.02, 0.05}, b ∈ {2 … 8, ∞}, 4 seeds, 6000 steps, uniform
