@@ -1,0 +1,18 @@
+=== E0_m30_n400: K=20 models, m=30, n=400, steps=10000, B=1024
+/Users/lakshya/Desktop/neurips workshop/superposition-precision/src/train.py:112: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /Users/runner/work/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:823.)
+  print(f"  [{exp} m={m} n={n} K={K}] step {step:5d} loss {float(loss):.4f} "
+  [E0 m=30 n=400 K=20] step     0 loss 443.5040 kappa(mean) 4.09  1s
+  [E0 m=30 n=400 K=20] step  1000 loss 300.9441 kappa(mean) 4.69  9s
+  [E0 m=30 n=400 K=20] step  2000 loss 297.5285 kappa(mean) 5.23  17s
+  [E0 m=30 n=400 K=20] step  3000 loss 296.8422 kappa(mean) 5.43  26s
+  [E0 m=30 n=400 K=20] step  4000 loss 296.1262 kappa(mean) 5.38  34s
+  [E0 m=30 n=400 K=20] step  5000 loss 295.5513 kappa(mean) 5.34  42s
+  [E0 m=30 n=400 K=20] step  6000 loss 295.5525 kappa(mean) 5.32  50s
+  [E0 m=30 n=400 K=20] step  7000 loss 294.8483 kappa(mean) 5.31  59s
+  [E0 m=30 n=400 K=20] step  8000 loss 295.0091 kappa(mean) 5.31  67s
+  [E0 m=30 n=400 K=20] step  9000 loss 295.3787 kappa(mean) 5.31  76s
+  [E0 m=30 n=400 K=20] step  9999 loss 294.9652 kappa(mean) 5.31  87s
+  done: train 87s, eval 80000 samples; N_ret by model: [0, 0, 44, 51, 58, 58, 79, 77, 109, 74, 67, 85, 0, 1, 0, 0]...
+=== E0_m30_n400 done in 92s (total 92s)
+ALL DONE
