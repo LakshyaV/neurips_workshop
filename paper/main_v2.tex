@@ -29,24 +29,26 @@ as resolvable as the grid it is stored on---so a layer doing more superposition 
 that hypothesis as a closed-form law (half a bit per doubling of features-per-dimension $F$) and tested it in 2{,}100
 toy models of superposition, against five non-quantization damage families, and inside GPT-2 small. It is wrong:
 the critical bit-width is flat in $F$ over a $14\times$ range (slope $-0.11$, CI $[-0.12,-0.09]$). What sets it is a
-universal tolerance to relative weight perturbation, shared by rounding, dithering, stochastic rounding and Gaussian
-noise, and the outlier ratio $\kappa=\max|W|/\mathrm{rms}(W)$, which enters as $\log_2\kappa$---causally in the toy
-model (clipping $\kappa$ moves the bit-width, $R^2=0.92$) and across GPT-2's 48 matrices ($R^2=0.53$). The
-half-bit-per-doubling exponent does exist, one level down: a feature's critical bit-width follows its own fp32 margin,
-$b_i = c-\tfrac12\log_2\mathrm{margin}_i$, in the toy model ($R^2=0.68$, 4{,}290 features), for GPT-2's next-token
-predictions (logit margin, not rarity; binned $R^2=0.90$) and for 22{,}499 sparse-autoencoder features (strength sets
-the bit-width at which a feature is erased; binned $R^2=0.94$). Quantization deletes a model's weakest features first,
-in an order that a one-number statistic predicts.
+tolerance to relative weight perturbation that is independent of $F$ and shared, within a factor of two, by rounding,
+dithering, stochastic rounding and Gaussian noise, together with the outlier ratio $\kappa=\max|W|/\mathrm{rms}(W)$, which
+enters as $\log_2\kappa$---causally in the toy model (clipping $\kappa$ moves the bit-width, $R^2=0.92$) and across
+GPT-2's 48 matrices ($R^2=0.53$), with a slope of $0.6$--$0.7$ that the measured $\kappa$-dependence of the tolerance
+predicts. In an exploratory follow-up the half-bit-per-doubling exponent reappears one level down: a feature's critical
+bit-width follows its own fp32 margin, in the toy model ($R^2=0.68$, 4{,}290 features), for GPT-2's next-token predictions
+(logit margin, not rarity; $R^2 = 0.23$ per token, $0.90$ binned) and for 22{,}499 sparse-autoencoder features ($R^2=0.45$
+per feature, $0.94$ binned). Quantization deletes a model's weakest features first, in an order that a one-number
+statistic predicts.
 \end{abstract}
 
 \section{Introduction}
 Superposition---packing more features than dimensions as nearly orthogonal directions~\cite{elhage2022toy}---is the
 prevailing account of how networks represent sparse features, and every quantitative treatment of it assumes
 infinite-precision weights. Quantization is the practice of storing those weights on a coarse grid. The two have never
-been connected, yet the connection seems obvious: a direction is only as resolvable as the grid it is stored on, so a layer
-that superposes more features per dimension ($F$) should need more bits. If true, this would convert a mechanistic quantity
-into an engineering one (a critical bit-width) and explain from first principles the folklore that outlier-heavy layers
-quantize badly~\cite{dettmers2022,xiao2023,lin2024awq}.
+been connected, yet a connection is natural: a direction is only as resolvable as the grid it is stored on, so a layer
+that superposes more features per dimension ($F$) should need more bits---an intuition entertained, without controls, in
+the one prior experiment on the question~\cite{bitnets}, and one we found compelling enough to preregister. If true, it
+would convert a mechanistic quantity into an engineering one (a critical bit-width) and give a representational account
+of the weight-outlier counterpart of the folklore that outliers make layers hard to quantize~\cite{dettmers2022,xiao2023,lin2024awq}.
 
 We made the intuition precise and \emph{preregistered} it (Sec.~\ref{sec:setup}): $b_{\mathrm{crit}} = 1 +
 \log_2(1+\kappa\sqrt{F/3})$, i.e.\ half a bit per doubling of $F$, with decision bands, controls and a real-model bridge
@@ -56,15 +58,17 @@ committed before any experiment ran. Then we tested it. Our contributions:
 quantization-aware and post-training quantization, the critical bit-width is flat in $F$ (slope $-0.11$
 [$-0.12$, $-0.09$]); in GPT-2 a superposition proxy predicts nothing ($R^2=0.04$). A corrected derivation explains why:
 at high $F$ the interference quantization adds must be compared with the interference already present, and $F$ cancels.
-\item \textbf{What sets the bit-width.} A \emph{universal} tolerance to relative weight perturbation---five damage
-families cross the same threshold, independent of $F$---and the outlier ratio $\kappa$, which enters as $\log_2\kappa$:
-causally in the toy model (clipping $\kappa$ at fixed configuration moves $b_{\mathrm{crit}}$ with $R^2=0.92$) and in
-GPT-2's 48 matrices ($R^2=0.53$). Per-channel scaling removes the $\kappa$ tax entirely (all 48 matrices at
-$2.7\pm0.3$ bits).
-\item \textbf{A per-feature law.} The half-bit-per-doubling exponent is real at the feature level: a feature's critical
-bit-width follows its fp32 margin, in toy models ($R^2=0.68$), for GPT-2 next-token predictions (margin beats rarity;
-binned $R^2=0.90$) and for GPT-2's internal sparse-autoencoder features (binned $R^2=0.94$, $n=22{,}499$). This is a
-mechanism for the tail-loss phenomenon of compressed models~\cite{hooker2019,hooker2020}.
+\item \textbf{What sets the bit-width.} A tolerance to relative weight perturbation that is independent of $F$ and
+shared within $2\times$ by five damage families, and the outlier ratio $\kappa$, which enters as $\log_2\kappa$: causally
+in the toy model (clipping $\kappa$ at fixed configuration moves $b_{\mathrm{crit}}$ with $R^2=0.92$) and in GPT-2's 48
+matrices ($R^2=0.53$). The tolerance itself grows as $\kappa^{0.46}$, which predicts the observed sub-unit slope. Per-channel
+scaling removes the $\kappa$ tax entirely (all 48 matrices at $2.7\pm0.3$ bits), and a $\kappa$-based bit allocator
+therefore does not beat uniform per-channel quantization---the mechanism is a diagnosis, not an allocator.
+\item \textbf{A per-feature law (exploratory, not preregistered).} The half-bit-per-doubling exponent is real at the
+feature level: a feature's critical bit-width follows its fp32 margin, in toy models ($R^2=0.68$), for GPT-2 next-token
+predictions (margin beats rarity; $R^2=0.23$ per token, $0.90$ binned) and for GPT-2's internal sparse-autoencoder
+features ($R^2=0.45$ per feature, $0.94$ binned, $n=22{,}499$). This is a candidate mechanism for the tail-loss
+phenomenon of compressed models~\cite{hooker2019,hooker2020}, found after the preregistered analyses and reported as such.
 \end{itemize}
 
 \begin{figure}[t]
@@ -113,8 +117,10 @@ corrected prediction is $\sigma_{\mathrm{rel,crit}}$ independent of $F$ and
 b_{\mathrm{crit}} \approx 1+\log_2\!\big(1+\kappa_{\mathrm{live}}/(\sqrt{12}\,\sigma_{\mathrm{rel,crit}})\big) = \mathrm{const} + \log_2\kappa_{\mathrm{live}} .
 \label{eq:corrected}
 \end{equation}
-The algebra is the uniform-quantizer noise formula inverted; the content is the claim that $\sigma_{\mathrm{rel,crit}}$
-is a property of the representation that does not depend on how densely features are packed.
+The algebra is the uniform-quantizer noise formula inverted; the empirical content is the claim that
+$\sigma_{\mathrm{rel,crit}}$ is a property of the representation that does not depend on how densely features are packed.
+We do not claim it is a universal constant: below we measure how it varies across damage types and with $\kappa$, and use
+the measured dependence in Eq.~\eqref{eq:corrected}.
 
 \section{Results}
 All toy models: Adam $10^{-3}$, 200-step warm-up, cosine decay, 6000 steps, fp32 on Apple MPS; $\ge$40k evaluation
@@ -129,7 +135,7 @@ models: $3.87\pm0.15$ bits in every cell, slope $+0.03$ [$0.02$, $0.04$]. In GPT
 at a time, App.~\ref{app:lm}) the noise threshold has no relation to a superposition proxy $\hat F = d_{\mathrm{in}}/\mathrm{PR}$
 (slope $+0.14$ [$-0.13$, $0.35$], $R^2=0.04$).
 
-\textbf{A universal tolerance (E3).} Applying seven damage families post-hoc to the same fp32 models on a common axis
+\textbf{An $F$-independent tolerance (E3).} Applying seven damage families post-hoc to the same fp32 models on a common axis
 $\sigma_{\mathrm{rel}} = \lVert D(W)-W\rVert_F/\lVert W\rVert_F$: RTN, per-channel RTN, dithered and stochastic rounding
 and Gaussian noise all cost 5\,\% of the represented features' explained variance at $\sigma_{\mathrm{rel}}\approx
 0.10$--$0.23$, flat in $F$ (slopes $0.00$--$0.05$ against the predicted $-\nicefrac12$; 44 cells), and their retention
@@ -144,22 +150,28 @@ $b_{\mathrm{crit}}$ from $4.69$ to $3.65$; pooled within-cell slope $0.65$, $R^2
 In GPT-2 the independently measured per-tensor RTN cliff of each matrix follows $\log_2\kappa$ with slope $0.63$
 [$0.49$, $0.76$], $R^2 = 0.53$, against $R^2=0.14$ for $\hat F$ (joint: $2.40+0.72\log_2\kappa-0.12\log_2\hat F$), and
 converting each matrix's Gaussian-noise threshold to bits with Eq.~\eqref{eq:corrected} reproduces its RTN cliff with a
-mean error of $-0.23$ bits. The slope is $0.6$--$0.7$ rather than $1$ everywhere because outlier-heavy tensors also
-tolerate more relative noise ($\sigma_{\mathrm{crit}}\propto\kappa^{0.46}$). With per-channel scaling the pathology
+mean error of $-0.23$ bits. The slope is $0.6$--$0.7$ rather than $1$ everywhere, and this is not a loose end: across the GPT-2 matrices the
+tolerance itself grows with the outlier ratio, $\sigma_{\mathrm{crit}}\propto\kappa^{0.46}$ ($R^2=0.35$; outlier-heavy
+tensors carry their function in a few large entries that a unit of relative noise moves less), and substituting
+$\sigma^*\propto\kappa^{0.46}$ into Eq.~\eqref{eq:corrected} predicts a slope of $1-0.46 = 0.54$, within the range
+measured in three independent settings (0.63 GPT-2, 0.65 E6, 0.72 E1). $\sigma^*$ is therefore not a constant but a
+smooth function of $\kappa$ that is flat in $F$. With per-channel scaling the pathology
 disappears and every GPT-2 matrix crosses the threshold at $2.70\pm0.33$ bits, uncorrelated with $\kappa$ or $\hat F$;
-consequently mixed precision has little left to gain (uniform per-channel RTN is within $0.01$--$0.02$ nats of a
-sensitivity oracle at 4 and 5 bits; App.~\ref{app:lm}). Dithered quantization is \emph{worse} than the shared lattice
+consequently mixed precision has little left to gain: uniform per-channel RTN is within $0.01$--$0.02$ nats of a
+sensitivity oracle at 4 and 5 bits, and a $\kappa$-based allocation is \emph{worse} than uniform there (App.~\ref{app:lm},
+Table~\ref{tab:mixed}). Only a per-matrix noise probe matches the oracle, and only between integer budgets. Dithered quantization is \emph{worse} than the shared lattice
 ($+0.27\pm0.13$ bits under QAT, up to $1.5$ bits post-training) because it moves the exact zeros of dead columns
 off the lattice; stochastic rounding is worse still ($+0.63\pm0.11$).
 
-\textbf{The per-feature law (E5, GPT-2).} Under power-law importance $I_i=(i+1)^{-\alpha}$ the toy model drops features
+\textbf{The per-feature law (E5, GPT-2; exploratory).} Under power-law importance $I_i=(i+1)^{-\alpha}$ the toy model drops features
 from the tail, and quantization respects the order (prefix fraction $0.95$--$0.99$ at every $b\ge3$ vs $0.96$--$0.98$ at
 fp32). The ten most important features need 3 bits in every configuration, the marginal ones 4--8; across all 4{,}290
 live features the critical bit-width follows the feature's fp32 margin above the retention threshold, $b_i = c -
 0.52\log_2(\rho_i^{\mathrm{fp32}}-\tfrac12)$, $R^2 = 0.68$. The same law holds inside GPT-2 twice. For next-token
 predictions (all 48 matrices quantized jointly, per-channel RTN, 49k held-out tokens): at 4 bits, tokens with an fp32
 logit margin below $\nicefrac18$ flip 58\,\% of the time, margin 1--2 logits 9\,\%, margin above 8 logits 0.5\,\%; the
-binned critical bit-width falls with $\log_2$ margin at slope $-0.39$ ($R^2=0.90$), and margin dominates rarity
+critical bit-width falls with $\log_2$ margin at slope $-0.34$ per token ($R^2=0.23$; individual tokens are noisy) and
+$-0.39$ for the binned means ($R^2=0.90$), and margin dominates rarity
 ($b_t = 5.30-0.36\log_2\mathrm{margin}-0.09\log_2\mathrm{freq}$). For internal features, using a public sparse autoencoder on
 the residual stream entering block 6 (24{,}576 features, 84\,\% variance explained on our text) and quantizing blocks 0--5
 jointly: 26/84/99\,\% of the 22{,}499 live features survive 3/4/5 bits, and which ones are erased is set by their
@@ -178,9 +190,9 @@ does $F$ set bits? & $b_{\mathrm{crit}}$ slope in $\log_2F$, QAT / PTQ & $-0.11$
 does $\kappa$ set bits? & within-cell slope in $\log_2\kappa$, $\kappa$ clipped (E6) & $0.65$, $R^2=0.92$ & $1$\\
  & GPT-2 RTN cliff vs $\log_2\kappa$ / vs $\log_2\hat F$ & $0.63$, $R^2=0.53$ / $0.28$, $R^2=0.14$ & --\\
 universal tolerance? & $\sigma_{\mathrm{rel,crit}}$ slope in $\log_2F$, five noise families & $0.00$ to $0.05$ & $-0.5$\\
-which features die? & toy: $b_i$ vs $\log_2$ margin ($n=4290$) & $-0.52$, $R^2=0.68$ & --\\
- & GPT-2 tokens: $b_t$ vs $\log_2$ logit margin & $-0.39$, binned $R^2=0.90$ & --\\
- & GPT-2 SAE features: $b_f$ vs $\log_2$ strength ($n=22499$) & $-0.37$ [$-0.38,-0.37$], binned $R^2=0.94$ & --\\\bottomrule
+which features die? (exploratory) & toy: $b_i$ vs $\log_2$ margin ($n=4290$) & $-0.52$, $R^2=0.68$ & --\\
+ & GPT-2 tokens: $b_t$ vs $\log_2$ logit margin & $-0.34$ ($R^2$ 0.23 per token; $-0.39$, 0.90 binned) & --\\
+ & GPT-2 SAE features: $b_f$ vs $\log_2$ strength ($n=22499$) & $-0.37$ [$-0.38,-0.37$] ($R^2$ 0.45; 0.94 binned) & --\\\bottomrule
 \end{tabular}}
 \end{table}
 \section{Related work}
@@ -188,15 +200,17 @@ Toy models of superposition established the phenomenon and its geometry at infin
 LessWrong replication with BitLinear reported ``later superposition onset'' without controls~\cite{bitnets}---our
 E1/E3 contradict the resolution intuition behind both. Compression is known to hurt the long tail~\cite{hooker2019,hooker2020}
 and outliers to govern quantization difficulty~\cite{dettmers2022,xiao2023,lin2024awq,frantar2022gptq}; recent work locates
-low-bit failures architecturally~\cite{inputs2025}. We supply the missing mechanism at both levels: outliers set a layer's
-bit budget through a universal tolerance, and margins set which features go first. The bit-width formula itself is the
-standard uniform-quantizer noise relation inverted; its content is the measured universality of $\sigma^*$.
+low-bit failures architecturally~\cite{inputs2025}. We supply a mechanism at both levels for weight quantization: weight outliers set a layer's
+bit budget through an $F$-independent tolerance, and margins set which features go first. The bit-width formula itself is
+the standard uniform-quantizer noise relation inverted; its content is the measured behaviour of $\sigma^*$.
 
 \section{Limitations and conclusion}
 The toy model is one tied layer with uniform importance in the main sweep; $\sigma^*$ is universal within it but its value
 depends on architecture and loss criterion, and in GPT-2 it varies $7\times$ across matrices. The superposition proxy
 $\hat F$ is crude, so the GPT-2 null against it is weaker than the toy null. The LM evidence is one 124M model, one
-corpus, one SAE layer, post-training only. The $\kappa$ slope is $\sim0.65$, not $1$. The preregistered hard count had to
+corpus, one SAE layer, post-training only; whether the laws hold at 7B scale is untested. We quantize weights; the
+activation-outlier phenomena behind LLM.int8 and SmoothQuant are a separate question (an activation arm is in
+App.~\ref{app:lm}). The per-feature law is exploratory. The $\kappa$ slope is $\sim0.65$, not $1$, for the reason given. The preregistered hard count had to
 be replaced by a continuous retention measure (documented before the affected results were seen, App.~\ref{app:deviations}).
 What survives is simple and testable: superposition is free to quantize; a layer's bit budget is set by its outliers;
 and at any precision the features a model loses are its weakest, in an order that one number per feature predicts.

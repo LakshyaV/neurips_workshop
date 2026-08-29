@@ -9,9 +9,12 @@ All numbers below are from `results/*.parquet` via `src/analysis*.py`; figures i
 Under round-to-nearest quantization the bit-width at which the represented features lose 5 % of their explained
 variance is ≈ 3.8–4.0 bits for every configuration tested, across F = 4 → 56 (m = 10 and 16, p = 0.002 → 0.05),
 both under quantization-aware training (E1) and post-training quantization of the same models (E3).
-What sets the threshold is (a) a universal tolerance to *relative weight perturbation* — every noise-like damage family
-crosses the 5 % line at the same σ_rel — and (b) the outlier ratio of the live weights, κ_live, exactly as the
-corrected derivation (DEVIATIONS.md D2) predicts. Scoring of every preregistered prediction is at the end.
+What sets the threshold is (a) a tolerance to *relative weight perturbation* that is independent of F and shared within
+~2× by every noise-like damage family (σ_rel,crit ≈ 0.10–0.23 in the toy; it is **not** a universal constant: in GPT-2 it
+varies 7× across matrices and grows as κ^0.46), and (b) the outlier ratio κ, entering as log2 κ with a slope of 0.6–0.7 —
+which is what Eq. (D2) predicts once the measured σ*(κ) ∝ κ^0.46 is substituted (1 − 0.46 = 0.54). The per-feature
+margin law (E5, §5D, §5E) is **exploratory** — found after the preregistered analyses — and is labelled as such.
+Scoring of every preregistered prediction is at the end.
 
 ## E0 — fp32 replication (gate 1) ✅
 n = 400, m = 30, uniform importance, 10 sparsity levels × 2 seeds, 10k steps. D* = m/Σ‖W_i‖² = 1.00 (S=0), 0.60
@@ -238,7 +241,7 @@ mlp.c_proj (κ = 158–186, > 0.05 nats even at 6 bits) and block-0 attn.c_proj 
 projections are the most noise-tolerant (σ_crit ≈ 0.7) yet not the easiest to quantize — which is exactly the
 κ-vs-σ_crit distinction the corrected law makes.
 
-## §5D — GPT-2: which tokens break first, and at how many bits (the per-feature law in a real LM)
+## §5D — GPT-2: which tokens break first, and at how many bits (the per-feature law in a real LM) — *exploratory, not preregistered*
 All 48 matrices quantized jointly (per-channel RTN, b ∈ {2, 3, 4, 5, 6, 8}) or perturbed jointly with Gaussian noise
 (σ_rel ∈ {0.03 … 0.4}), on 49,104 held-out WikiText-2 tokens (offset 147,456; fp32 NLL 3.425, top-1 accuracy 0.376).
 For every token the fp32 model predicts correctly (n = 18,464) we record its fp32 logit margin (correct logit minus the
@@ -267,7 +270,7 @@ runner-up) and whether its prediction survives each condition. `src/lm_tokens.py
 - Same exponent family as the toy per-feature law (b_i = c − 0.52·log2 margin_i in variance units): the tail of the
   margin distribution is what a given precision deletes, half a bit or so per doubling of the margin.
 
-## §5E — GPT-2: which *internal features* are erased (sparse-autoencoder features, the per-feature law inside a real LM)
+## §5E — GPT-2: which *internal features* are erased (sparse-autoencoder features) — *exploratory, not preregistered*
 SAE: `jbloom/GPT2-Small-SAEs-Reformatted`, `blocks.6.hook_resid_pre` (24,576 features on the 768-d residual stream entering
 block 6; sae_lens convention verified by reconstruction: 84 % variance explained, L0 ≈ 58 on our text, vs. < 0 for the
 wrong input conventions). 196,596 held-out WikiText-2 tokens in 128-token BOS-prefixed contexts (the SAE's training
@@ -317,7 +320,8 @@ context). Blocks 0–5 (24 matrices) are damaged jointly — per-channel RTN at 
 | E2: Q vs dithered Q_u | no direction preregistered | shared lattice **better** (PTQ: dither costs 0.2–1.5 bits; QAT: dither +0.27 ± 0.13 bits, stochastic +0.63 ± 0.11, per-channel −0.54 ± 0.09, paired n = 12) — because the lattice contains 0 |
 | §5A: log2 σ_crit vs log2 F̂ slope ∈ [−0.65, −0.35] | | **not**: +0.14 [−0.13, 0.35], R² 0.04 |
 | §5A: b_crit − log2 κ vs log2 F̂ slope ≈ ½ | | **not**: −0.17 [−0.37, 0.09] |
-| (D2, written before E1/E3) σ_crit flat in F; b_crit = const + log2 κ where κ cannot adapt | | **confirmed** (E3 slopes ≈ 0; E6/E1/GPT-2 κ slopes 0.63–0.72) |
+| (D2, written before E1/E3) σ_crit flat in F; b_crit = const + log2 κ where κ cannot adapt | | **confirmed** (E3 slopes ≈ 0; E6/E1/GPT-2 κ slopes 0.63–0.72, i.e. 0.54 predicted from σ* ∝ κ^0.46) |
+| per-feature margin law (E5 per-feature, §5D tokens, §5E SAE) | *not preregistered* | exploratory positive: slopes −0.52 / −0.39 (binned; −0.34 per token, R² 0.23) / −0.37 (R² 0.45 per feature, 0.94 binned) |
 
 ## Things that went wrong and were fixed (audit trail)
 - The soft count clipped at 0 has a Monte-Carlo clipping bias when reference and damaged models are evaluated with
