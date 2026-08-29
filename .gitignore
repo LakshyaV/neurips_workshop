@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+results/ckpt/
+results/gpt2_local/
+results/wikitext2_test.parquet
+results/wikitext2_test_gpt2_ids.npy
+results/E3.parquet
+results/E3_part*.parquet
+results/E3_pilot.parquet
+results/lm_smoke.parquet
+results/*_trainlog.parquet
+paper/*.aux
+paper/*.log
+paper/tectonic_test.log
