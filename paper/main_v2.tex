@@ -168,19 +168,20 @@ $2^{0}$ survive at 3; per-feature slope $-0.37$ [$-0.38$, $-0.37$] ($R^2 = 0.45$
 frequency adding nothing ($+0.02$). Gaussian noise produces the same curves in every case.
 
 
-\begin{table}[h]\centering\small
-\caption{Key quantitative results (CIs: seed bootstrap for toy models, matrix/token bootstrap for GPT-2).}
+\begin{table}[h]\centering\footnotesize
+\caption{Key results (CIs: seed bootstrap for toy models, matrix bootstrap for GPT-2; ``prereg.'' = preregistered value).}
 \label{tab:key}
-\begin{tabular}{llll}\toprule
-question & quantity & result & prediction\\\midrule
-does $F$ set bits? & slope of $b_{\mathrm{crit}}$ in $\log_2F$ (E1 QAT / E3 PTQ) & $-0.11$ [$-0.12,-0.09$] / $+0.03$ [$0.02,0.04$] & $+0.5$ (prereg.)\\
-does $\kappa$ set bits? & within-cell slope in $\log_2\kappa$ (E6) & $0.65$, $R^2\,0.92$ & $1$ (prereg.)\\
- & GPT-2 RTN cliff vs $\log_2\kappa$ / $\log_2\hat F$ & $0.63$, $R^2\,0.53$ / $0.28$, $R^2\,0.14$ & $\kappa$ only\\
-universal tolerance? & $\sigma_{\mathrm{rel,crit}}$ slope in $\log_2F$, 5 noise families (E3) & $0.00$--$0.05$ & $-0.5$ (prereg.)\\
-which features die? & toy: $b_i$ vs $\log_2$ margin & $-0.52$, $R^2\,0.68$ ($n$=4290) & $-0.5$\\
- & GPT-2 tokens: $b_t$ vs $\log_2$ logit margin & $-0.39$, binned $R^2\,0.90$ & \\
- & GPT-2 SAE features: $b_f$ vs $\log_2$ strength & $-0.37$ [$-0.38,-0.37$], binned $R^2\,0.94$ & \\\bottomrule
-\end{tabular}
+\setlength{\tabcolsep}{4pt}
+\resizebox{\linewidth}{!}{\begin{tabular}{llll}\toprule
+question & quantity & result & prereg.\\\midrule
+does $F$ set bits? & $b_{\mathrm{crit}}$ slope in $\log_2F$, QAT / PTQ & $-0.11$ [$-0.12,-0.09$] / $+0.03$ [$0.02,0.04$] & $+0.5$\\
+does $\kappa$ set bits? & within-cell slope in $\log_2\kappa$, $\kappa$ clipped (E6) & $0.65$, $R^2=0.92$ & $1$\\
+ & GPT-2 RTN cliff vs $\log_2\kappa$ / vs $\log_2\hat F$ & $0.63$, $R^2=0.53$ / $0.28$, $R^2=0.14$ & --\\
+universal tolerance? & $\sigma_{\mathrm{rel,crit}}$ slope in $\log_2F$, five noise families & $0.00$ to $0.05$ & $-0.5$\\
+which features die? & toy: $b_i$ vs $\log_2$ margin ($n=4290$) & $-0.52$, $R^2=0.68$ & --\\
+ & GPT-2 tokens: $b_t$ vs $\log_2$ logit margin & $-0.39$, binned $R^2=0.90$ & --\\
+ & GPT-2 SAE features: $b_f$ vs $\log_2$ strength ($n=22499$) & $-0.37$ [$-0.38,-0.37$], binned $R^2=0.94$ & --\\\bottomrule
+\end{tabular}}
 \end{table}
 \section{Related work}
 Toy models of superposition established the phenomenon and its geometry at infinite precision~\cite{elhage2022toy}; a
@@ -264,7 +265,7 @@ avg.\ bits & uniform & $\kappa$-rule & noise-probe law & oracle & random ($\time
 \label{app:score}
 \label{app:deviations}
 \begin{center}\small
-\begin{tabular}{p{4.6cm}p{3.6cm}p{5.2cm}}\toprule
+\resizebox{\linewidth}{!}{\begin{tabular}{p{4.6cm}p{3.6cm}p{5.6cm}}\toprule
 prediction & rule & outcome\\\midrule
 P1: slope $\nicefrac12$ in $\log_2F$ & $[0.4,0.6]$ / $[0.15,0.35]$ / $<0.15$ & \textbf{dead}: $-0.11$ (QAT), $+0.03$ (PTQ), all definitions $<0.15$\\
 P2: $\kappa$ enters as $\log_2\kappa$, slope 1 & $[0.7,1.3]$ / $\approx0$ / partial & \textbf{partial, strong}: $0.65$ ($R^2$ 0.92), $0.72$, $0.63$\\
@@ -273,7 +274,7 @@ E3: noise-like slope $-\nicefrac12$; structured $\approx0$ & & noise-like $\appr
 E4: top features unchanged & drop $<0.05$ & tilt, not translation (uniform $I$)\\
 LM: $\log_2\sigma_{\mathrm{crit}}$ vs $\log_2\hat F\in[-0.65,-0.35]$ & & \textbf{not}: $+0.14$ [$-0.13$, $0.35$]\\
 D2 (pre-E1): $\sigma_{\mathrm{crit}}$ flat, $b=\mathrm{const}+\log_2\kappa$ & & \textbf{confirmed}\\\bottomrule
-\end{tabular}
+\end{tabular}}
 \end{center}
 Deviations (dated in the repository): D1, after the fp32-only gate, the hard count made continuous; D2, after the sizing
 pilot and before the main sweep, the corrected derivation and its decision rule; D3, after a pilot damage run, clipping
