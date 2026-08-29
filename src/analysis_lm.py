@@ -155,8 +155,10 @@ def run_pc(path=os.path.join(RES, "lm_layers_pc.parquet"), thresholds=(0.02, 0.0
     return t, res
 
 
-def run_mixed(path=os.path.join(RES, "lm_mixed.parquet")):
-    d = pd.read_parquet(path)
+def run_mixed(path=os.path.join(RES, "lm_mixed.csv")):
+    d = pd.read_csv(path)
+    if "sem" not in d.columns:
+        d["sem"] = 0.0
     piv = d.pivot_table(index="budget", columns="alloc", values="dnll")
     print(piv.to_string(float_format=lambda v: f"{v:.4f}"))
     fig, ax = plt.subplots(figsize=(5, 3.4))

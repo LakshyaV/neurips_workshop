@@ -1,0 +1,6 @@
+regen results/ckpt/E1_m10_n1280.pt
+regen results/ckpt/E1_m10_n640.pt
+regen results/ckpt/E1_m16_n1024.pt
+regen results/ckpt/E1_m16_n128.pt
+regen results/ckpt/E1_m16_n2048.pt
+regen results/ckpt/E1_m16_n256.pt
