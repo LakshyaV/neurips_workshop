@@ -54,3 +54,18 @@ additionally adapt κ, which would flatten even the κ term (the pilot is consis
 with the CI excluding 0.5 → the preregistered ½-law is **rejected**; the κ-only law is supported if b_crit
 tracks log2 κ with slope ≈ 1 where κ is not free to adapt (PTQ, E3; GPT-2, §5A) and if σ_rel,crit is flat in F.
 The original PREDICTIONS.md bands are still scored as written.
+
+## D3 (2026-08-29 13:05, after the pilot-checkpoint E3 run, before E1 results were analyzed)
+
+**Evidence:** two artefacts in the D1 soft count surfaced on the post-hoc damage families.
+(i) Clipping ρ at 0 gives a positive Monte-Carlo bias on the ~1000–2000 unrepresented features whenever the
+damaged and reference models are evaluated with different sample counts (R_soft = 1.16–1.19 > 1 for RTN at
+b ≥ 4 in the first pilot-E3 run). (ii) The unclipped Σρ_i counts damage to *unrepresented* features: Gaussian noise
+(unlike RTN, whose lattice contains 0) wakes every dead column, and at ℓ = 4 % live columns a 5 % drop in Σρ
+is produced by ρ ≈ −0.0015 on each of ~2000 dead features — not a statement about the represented features.
+
+**Change:** primary retention curve = **R_live(b) = Σ_{i ∈ live(fp32)} ρ_i(b) / Σ_{i ∈ live(fp32)} ρ_i(fp32)**,
+the explained variance of the features that the fp32 model of the same (config, seed) represents
+(‖W_i‖ ≥ 0.5), unclipped, with reference and damaged/quantized models evaluated on identical samples
+(paired). This is the soft analogue of the preregistered "features retained" count; damage to features the
+model never represented is reported separately (R_soft, all features). Threshold and interpolation rules as in D1.

@@ -4,7 +4,7 @@ import numpy as np, pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from .analysis import (load, model_summary, attach_fp32_ref, crossing, bcrit_table, config_means, fit_slope_bootstrap,
+from .analysis import (load, model_summary, attach_fp32_ref, add_soft_live, crossing, bcrit_table, config_means, fit_slope_bootstrap,
                        ols, predicted_bcrit, COL, P_COL, M_MK, RES, FIGS, CFG, fig_money)
 from .metrics import prefix_fraction
 
@@ -18,17 +18,22 @@ MODE_LAB = {0: "uniform (shared lattice)", 3: "dithered lattice", 4: "stochastic
 # ------------------------------------------------------------------------------------------ E3
 def e3_tables(frac=0.95, e3_exp="E3", ref_exp="E1"):
     """Per (family, config, seed, draw): sigma_rel at the R_soft = frac crossing, on the -log2(sigma_rel) axis."""
-    e3 = model_summary(load(e3_exp))
-    ref = model_summary(load(ref_exp))
-    ref = ref[np.isinf(ref.bits) & (ref["mode"] == 0)][["m", "n", "p", "seed", "soft", "nret_50", "live", "kappa"]]
-    ref = ref.rename(columns=dict(soft="soft_inf", nret_50="nret_50_inf", live="live_inf", kappa="kappa_inf"))
-    s = e3.merge(ref, on=["m", "n", "p", "seed"], how="inner")
+    df3 = load(e3_exp)
+    e3 = model_summary(df3)
+    keys3 = ["damage_type", "m", "n", "p", "seed"]
+    e3 = add_soft_live(df3, e3, np.isinf(df3.knob), keys3)
+    # paired reference: the undamaged copy evaluated inside the same family stack (identical samples)
+    ref = e3[np.isinf(e3.knob)][keys3 + ["soft", "soft_live", "nret_50", "live", "kappa"]]
+    ref = ref.rename(columns=dict(soft="soft_inf", soft_live="soft_live_inf", nret_50="nret_50_inf", live="live_inf", kappa="kappa_inf"))
+    s = e3[~np.isinf(e3.knob)].merge(ref, on=keys3, how="inner")
     s["R_soft"] = s.soft / s.soft_inf
+    s["R_live"] = s.soft_live / s.soft_live_inf
+    curve = "R_live"
     s["F"] = s.live_inf / s.m
     s["x"] = -np.log2(s.sigma_rel.clip(lower=1e-9))
     rows = []
     for (fam, m, n, p, seed, draw), g in s.groupby(["damage_type", "m", "n", "p", "seed", "draw"]):
-        xc, cen = crossing(g.x.values, g.R_soft.values, frac, xmin=-np.inf, xmax=np.inf)
+        xc, cen = crossing(g.x.values, g[curve].values, frac, xmin=-np.inf, xmax=np.inf)
         rows.append(dict(damage_type=fam, m=m, n=n, p=p, seed=seed, draw=draw, x_crit=xc, sigma_crit=2.0 ** (-xc) if np.isfinite(xc) else np.nan,
                          censor=cen, F=g.F.iloc[0], kappa_inf=g.kappa_inf.iloc[0]))
         # bits-axis b_crit for the ptq families
@@ -36,7 +41,7 @@ def e3_tables(frac=0.95, e3_exp="E3", ref_exp="E1"):
     # PTQ on the bits axis (comparable to E1's QAT b_crit)
     rows = []
     for (fam, m, n, p, seed, draw), g in s[s.damage_type.str.startswith("ptq")].groupby(["damage_type", "m", "n", "p", "seed", "draw"]):
-        bc, cen = crossing(g.knob.values, g.R_soft.values, frac)
+        bc, cen = crossing(g.knob.values, g[curve].values, frac)
         rows.append(dict(damage_type=fam, m=m, n=n, p=p, seed=seed, draw=draw, b_crit=bc, censor=cen, F=g.F.iloc[0], kappa_inf=g.kappa_inf.iloc[0]))
     tab_bits = pd.DataFrame(rows)
     return s, tab, tab_bits
@@ -72,7 +77,7 @@ def fig_e3(s, tab, tab_bits, e1_cm, path, frac=0.95):
             xs = np.linspace(np.log2(cm.F.min()) - 0.2, np.log2(cm.F.max()) + 0.2, 20)
             ax.plot(xs, -(f["intercept"] + f["slope"] * xs), color=FAM_COL[fam], lw=1.4,
                     label=f"{fam}: slope {-f['slope']:.2f} [{-f['hi']:.2f}, {-f['lo']:.2f}]")
-    ax.set_xlabel("log2 F"); ax.set_ylabel(f"log2 σ_rel at R_soft = {frac:.2f}   (σ_rel = ‖D(W)−W‖/‖W‖)")
+    ax.set_xlabel("log2 F"); ax.set_ylabel(f"log2 σ_rel at R_live = {frac:.2f}   (σ_rel = ‖D(W)−W‖/‖W‖)")
     ax.set_title("E3: damage threshold vs superposition, post-hoc on fp32 weights\n(noise-law prediction: slope −½)", fontsize=8)
     ax.legend(fontsize=6, frameon=False, loc="lower left")
     # panel b: R_soft vs sigma_rel curves overlaid for one config (largest F with a clean crossing)
@@ -86,10 +91,10 @@ def fig_e3(s, tab, tab_bits, e1_cm, path, frac=0.95):
             gg = g[g.damage_type == fam]
             if len(gg) == 0:
                 continue
-            mean = gg.groupby("knob").agg(sr=("sigma_rel", "mean"), R=("R_soft", "mean"), sd=("R_soft", "std")).sort_values("sr")
+            mean = gg.groupby("knob").agg(sr=("sigma_rel", "mean"), R=("R_live", "mean"), sd=("R_live", "std")).sort_values("sr")
             ax.plot(mean.sr, mean.R, "-o", ms=2.5, lw=1.1, color=FAM_COL[fam], label=fam)
         ax.axhline(frac, color=COL["gray"], lw=0.8, ls="--"); ax.set_xscale("log")
-        ax.set_xlabel("σ_rel"); ax.set_ylabel("R_soft"); ax.set_title(f"retention vs damage size, m={m}, n={n}, p={p} (F≈{ok[sel]:.1f})", fontsize=8)
+        ax.set_xlabel("σ_rel"); ax.set_ylabel("R_live"); ax.set_title(f"retention vs damage size, m={m}, n={n}, p={p} (F≈{ok[sel]:.1f})", fontsize=8)
         ax.legend(fontsize=6, frameon=False); ax.set_ylim(-0.05, 1.1)
     # panel c: bits axis: QAT (E1) vs PTQ families
     ax = axes[2]
@@ -132,8 +137,8 @@ def run_e3(e1_out=None, e3_exp="E3", ref_exp="E1", figname="fig3_anydamage_null.
 # ------------------------------------------------------------------------------------------ E2
 def run_e2():
     df = load("E2")
-    s = attach_fp32_ref(model_summary(df))
-    tab = bcrit_table(s, curve="R_soft", frac=0.95, arm_cols=("mode",))
+    s = attach_fp32_ref(add_soft_live(df, model_summary(df), np.isinf(df.bits) & (df["mode"] == 0), CFG))
+    tab = bcrit_table(s, curve="R_live", frac=0.95, arm_cols=("mode",))
     fits = {mo: fit_slope_bootstrap(tab[tab["mode"] == mo]) for mo in sorted(tab["mode"].unique())}
     cm = config_means(tab)
     cm.to_csv(os.path.join(RES, "E2_bcrit_by_mode.csv"), index=False)
@@ -144,12 +149,12 @@ def run_e2():
             ax = axes[i, j]
             g = s[(s.p == p) & (s.n == s.m * r) & ~np.isinf(s.bits)]
             for mo, gm in g.groupby("mode"):
-                mean = gm.groupby("bits").R_soft.mean(); sd = gm.groupby("bits").R_soft.std()
+                mean = gm.groupby("bits").R_live.mean(); sd = gm.groupby("bits").R_live.std()
                 ax.errorbar(mean.index, mean.values, yerr=sd.values, fmt="-o", ms=2.5, lw=1, capsize=1.5, color=MODE_COL.get(mo, COL["gray"]), label=MODE_LAB.get(mo, str(mo)))
             ax.axhline(0.95, color=COL["gray"], lw=0.7, ls="--"); ax.set_ylim(-0.05, 1.1)
             ax.set_title(f"p={p}, n/m={r}", fontsize=7)
             if i == len(ps) - 1: ax.set_xlabel("bits")
-            if j == 0: ax.set_ylabel("R_soft")
+            if j == 0: ax.set_ylabel("R_live")
         ax = axes[i, -1]; ax.axis("off")
     axes[0, 0].legend(fontsize=5.5, frameon=False)
     # last column: b_crit vs log2F per mode (single panel spanning)
@@ -177,7 +182,7 @@ def run_e2():
 # ------------------------------------------------------------------------------------------ E5
 def run_e5():
     df = load("E5")
-    s = attach_fp32_ref(model_summary(df))
+    s = attach_fp32_ref(add_soft_live(df, model_summary(df), np.isinf(df.bits) & (df["mode"] == 0), CFG))
     rows = []
     for rid, g in df.groupby("run_id", sort=False):
         g = g.sort_values("feature_idx")
@@ -210,7 +215,7 @@ def run_e5():
                                                                                         prefix_strict=("prefix_strict", "mean"), strict_inf=("prefix_strict_inf", "mean"), nret=("nret_50", "mean"), nret_inf=("nret_50_inf", "mean")).reset_index()
     summ["drop"] = summ.prefix_inf - summ.prefix_overlap
     print(summ.to_string(float_format=lambda v: f"{v:.3f}"))
-    tab_h = bcrit_table(s, curve="R_hard", frac=0.95, extra_keys=()); tab_s = bcrit_table(s, curve="R_soft", frac=0.95)
+    tab_h = bcrit_table(s, curve="R_hard", frac=0.95, extra_keys=()); tab_s = bcrit_table(s, curve="R_live", frac=0.95)
     for nm, t in [("hard", tab_h), ("soft", tab_s)]:
         f = fit_slope_bootstrap(t, keys=("m", "n", "p", "alpha")); print(f"E5 b_crit ({nm}) slope vs log2 F over (n,p,α): {f['slope']:.3f} [{f['lo']:.3f},{f['hi']:.3f}] n_cfg={f['n_cfg']}")
     return s, summ
@@ -219,8 +224,8 @@ def run_e5():
 # ------------------------------------------------------------------------------------------ E6
 def run_e6():
     df = load("E6")
-    s = attach_fp32_ref(model_summary(df))          # fp32 ref has the same kclip (CFG includes kclip)
-    tab = bcrit_table(s, curve="R_soft", frac=0.95)
+    s = attach_fp32_ref(add_soft_live(df, model_summary(df), np.isinf(df.bits) & (df["mode"] == 0), CFG))   # ref has the same kclip
+    tab = bcrit_table(s, curve="R_live", frac=0.95)
     cm = config_means(tab)
     cm.to_csv(os.path.join(RES, "E6_bcrit_by_kclip.csv"), index=False)
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.4))

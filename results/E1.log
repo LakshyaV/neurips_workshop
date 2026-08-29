@@ -43,3 +43,7 @@ Consider using tensor.detach() first. (Triggered internally at /Users/runner/wor
 === E1_m10_n320 done in 801s (total 1110s)
 === E1_m10_n640: K=128 models, m=10, n=640, steps=6000, B=1024
   [E1 m=10 n=640 K=128] step     0 loss 505.1318 kappa(mean) 3.90  0s
+  [E1 m=10 n=640 K=128] step  1000 loss 488.8297 kappa(mean) 5.16  103s
+  [E1 m=10 n=640 K=128] step  2000 loss 485.7586 kappa(mean) 5.68  291s
+  [E1 m=10 n=640 K=128] step  3000 loss 485.1628 kappa(mean) 5.79  461s
+  [E1 m=10 n=640 K=128] step  4000 loss 483.7588 kappa(mean) 5.82  633s

@@ -23,6 +23,8 @@ DRAWS = {"ptq_uniform": 1, "ptq_dither": 2, "ptq_perchannel": 1, "ptq_stochastic
 
 def apply(family, W, knob, draw):
     K, m, n = W.shape
+    if knob == "clean":
+        return W.clone()
     gen = torch.Generator(device="cpu").manual_seed(10_000 + draw)
     if family.startswith("ptq"):
         qmax = qmax_from_bits(torch.full((K, 1, 1), float(knob))).to(W.device)
@@ -59,7 +61,7 @@ def run_ckpt(path, device, families, out_rows):
         knobs = FAMILIES[fam] if FAMILIES[fam] is not None else list(range(1, m + 1))
         t0 = time.time()
         # stack all (knob, draw) levels along K and evaluate in one batched pass (chunked by memory)
-        levels = [(kn, d) for kn in knobs for d in range(DRAWS[fam])]
+        levels = [("clean", 0)] + [(kn, d) for kn in knobs for d in range(DRAWS[fam])]   # undamaged copy: paired reference
         Wd_all = torch.cat([apply(fam, W, kn, d) for kn, d in levels], dim=0)
         b_all = b.repeat(len(levels), 1)
         gidx_all = gidx0.repeat(len(levels))
@@ -77,8 +79,8 @@ def run_ckpt(path, device, families, out_rows):
                 k = li * K0 + j
                 out_rows.append(pd.DataFrame(dict(
                     run_id=f"E3_{fam}_m{m}_n{n}_p{s['p']}_k{kn}_d{d}_s{s['seed']}", exp="E3", group=tag,
-                    m=m, n=n, p=float(s["p"]), alpha=0.0, bits=(float(kn) if fam.startswith("ptq") else float("nan")),
-                    mode=-1, mode_name=fam, damage_type=fam, knob=float(kn), draw=d, seed=int(s["seed"]),
+                    m=m, n=n, p=float(s["p"]), alpha=0.0, bits=(float(kn) if (fam.startswith("ptq") and kn != "clean") else float("nan")),
+                    mode=-1, mode_name=fam, damage_type=fam, knob=(float("inf") if kn == "clean" else float(kn)), draw=d, seed=int(s["seed"]),
                     kclip=float("inf"), feature_idx=np.arange(n), importance=1.0, rho_i=rho_np[k], D_i=D_np[k],
                     w_norm=wn[k], kappa=float(kap0[j]), sigma_eps_measured=float(sig_np[k]),
                     sigma_rel=float(sig_np[k] / max(rms_np[k], 1e-12)), rms_w=float(rms_np[k]),

@@ -1,5 +1,9 @@
 === results/ckpt/pilot_m16_n2048.pt
-  pilot_m16_n2048 ptq_uniform: 7 levels x 16 models in 10s; N_ret range 0..136
-  pilot_m16_n2048 ptq_dither: 14 levels x 16 models in 18s; N_ret range 0..135
-  pilot_m16_n2048 ptq_perchannel: 7 levels x 16 models in 9s; N_ret range 0..136
-  pilot_m16_n2048 ptq_stochastic: 14 levels x 16 models in 18s; N_ret range 0..136
+  pilot_m16_n2048 ptq_uniform: 8 levels x 16 models in 19s; N_ret range 0..136
+  pilot_m16_n2048 ptq_dither: 15 levels x 16 models in 36s; N_ret range 0..136
+  pilot_m16_n2048 ptq_perchannel: 8 levels x 16 models in 13s; N_ret range 0..137
+  pilot_m16_n2048 ptq_stochastic: 15 levels x 16 models in 23s; N_ret range 0..137
+  pilot_m16_n2048 gaussian: 33 levels x 16 models in 64s; N_ret range 0..136
+  pilot_m16_n2048 rank: 17 levels x 16 models in 37s; N_ret range 0..135
+  pilot_m16_n2048 dropout: 21 levels x 16 models in 38s; N_ret range 0..137
+ALL DONE

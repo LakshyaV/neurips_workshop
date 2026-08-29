@@ -32,24 +32,41 @@ def model_summary(df):
     g = d.groupby("run_id", sort=False)
     s = g[const].first()
     s["nret_25"], s["nret_50"], s["nret_75"] = g.r25.sum(), g.r50.sum(), g.r75.sum()
-    s["soft"], s["live"], s["wn2_sum"], s["wn2_max"] = g.rpos.sum(), g.live.sum(), g.wn2.sum(), g.wn2.max()
+    s["soft"], s["soft_c"] = g.rho_i.sum(), g.rpos.sum()            # unclipped Σρ_i (unbiased) is primary; clipped kept for reference
+    s["live"], s["wn2_sum"], s["wn2_max"] = g.live.sum(), g.wn2.sum(), g.wn2.max()
     s["rho_mean_live"] = (d.rho_i * d.live).groupby(d.run_id, sort=False).sum() / g.live.sum().clamp(1) if hasattr(g.live.sum(), "clamp") else \
         (d.rho_i * d.live).groupby(d.run_id, sort=False).sum() / g.live.sum().clip(lower=1)
     s["nfeat"] = g.size()
     return s.reset_index()
 
 
+def add_soft_live(df, s, is_ref, keys):
+    """soft_live = Σ_{i live in the reference model (‖W_i‖ ≥ 0.5)} ρ_i, per model; reference = same keys."""
+    ref = df[is_ref][keys + ["feature_idx", "w_norm"]].rename(columns={"w_norm": "w_norm_ref"})
+    d = df[keys + ["run_id", "feature_idx", "rho_i"]].merge(ref, on=keys + ["feature_idx"], how="inner")
+    d["rl"] = d.rho_i * (d.w_norm_ref >= 0.5)
+    sl = d.groupby("run_id", sort=False).rl.sum().rename("soft_live")
+    return s.merge(sl, left_on="run_id", right_index=True, how="left")
+
+
 def attach_fp32_ref(s, ref_mode=0):
     """Attach the fp32 (bits=inf, mode=0) arm of the same (config, seed) as *_inf columns."""
     ref = s[np.isinf(s.bits) & (s["mode"] == ref_mode)]
-    ref = ref[CFG + ["soft", "nret_50", "nret_25", "nret_75", "live", "kappa", "wn2_sum", "wn2_max", "rms_w", "amax", "loss_final"]]
+    cols = [c for c in ["soft", "soft_c", "soft_live", "nret_50", "nret_25", "nret_75", "live", "kappa", "wn2_sum", "wn2_max", "rms_w", "amax", "loss_final"] if c in ref.columns]
+    ref = ref[CFG + cols]
     ref = ref.rename(columns={c: c + "_inf" for c in ref.columns if c not in CFG})
     out = s.merge(ref, on=CFG, how="left")
     out["R_soft"] = out.soft / out.soft_inf
+    if "soft_live" in out.columns:
+        out["R_live"] = out.soft_live / out.soft_live_inf
+        out["R_softc"] = out.soft_c / out.soft_c_inf
     out["R_hard"] = out.nret_50 / out.nret_50_inf.replace(0, np.nan)
     out["R_hard25"] = out.nret_25 / out.nret_25_inf.replace(0, np.nan)
     out["R_hard75"] = out.nret_75 / out.nret_75_inf.replace(0, np.nan)
     out["F"] = out.live_inf / out.m
+    out["ell_inf"] = out.live_inf / out.n
+    out["kappa_live_inf"] = out.kappa_inf * np.sqrt(out.ell_inf)          # amax relative to rms of the live weights
+    out["kappa_live"] = out.kappa * np.sqrt(out.live.clip(lower=1) / out.n)
     out["F_soft"] = out.wn2_sum_inf / out.wn2_max_inf / out.m
     # continuous axis: effective bits from the measured residual (PREDICTIONS.md rule 5)
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -89,6 +106,8 @@ def bcrit_table(s, curve="R_soft", frac=0.95, axis="bits", arm_cols=("mode",), e
 def config_means(tab, keys=("m", "n", "p", "alpha", "kclip", "mode")):
     keys = [k for k in keys if k in tab.columns]
     ok = tab[tab.censor == "ok"]
+    if "F_soft" not in tab.columns:
+        tab = tab.assign(F_soft=tab.F)
     g = tab.groupby(keys)
     out = g.agg(F=("F", "mean"), F_soft=("F_soft", "mean"), kappa=("kappa_inf", "mean"), n_seeds=("seed", "nunique"),
                 n_low=("censor", lambda c: (c == "low").sum()), n_high=("censor", lambda c: (c == "high").sum())).reset_index()
@@ -281,10 +300,12 @@ def fig_translation(df, s, path, m=16, ratios=(8, 32, 128)):
 def run_e1(exp="E1"):
     os.makedirs(FIGS, exist_ok=True)
     df = load(exp)
-    s = attach_fp32_ref(model_summary(df))
+    s = model_summary(df)
+    s = add_soft_live(df, s, np.isinf(df.bits) & (df["mode"] == 0), CFG)
+    s = attach_fp32_ref(s)
     s.to_csv(os.path.join(RES, f"{exp}_model_summary.csv"), index=False)
     out = {}
-    for curve, frac in [("R_soft", 0.95), ("R_soft", 0.90), ("R_soft", 0.99), ("R_hard", 0.95), ("R_hard25", 0.95), ("R_hard75", 0.95)]:
+    for curve, frac in [("R_live", 0.95), ("R_live", 0.90), ("R_live", 0.99), ("R_soft", 0.95), ("R_softc", 0.95), ("R_hard", 0.95), ("R_hard25", 0.95), ("R_hard75", 0.95)]:
         tab = bcrit_table(s, curve=curve, frac=frac)
         if len(tab) == 0:
             continue
@@ -299,11 +320,11 @@ def run_e1(exp="E1"):
         print(f"{exp} {tag}: slope {fit['slope']:.3f} [{fit['lo']:.3f},{fit['hi']:.3f}] R²={fit['r2']:.2f} n_cfg={fit['n_cfg']} | "
               f"κ-corr slope {fit_kc['slope']:.3f} [{fit_kc['lo']:.3f},{fit_kc['hi']:.3f}]")
     # continuous axis (b_eff from measured residual)
-    tab = bcrit_table(s, curve="R_soft", frac=0.95, axis="b_eff")
+    tab = bcrit_table(s, curve="R_live", frac=0.95, axis="b_eff")
     if len(tab):
-        fit = fit_slope_bootstrap(tab); print(f"{exp} R_soft_95 on b_eff axis: slope {fit['slope']:.3f} [{fit['lo']:.3f},{fit['hi']:.3f}] n_cfg={fit['n_cfg']}")
-        out[("R_soft_beff", 0.95)] = dict(fit=fit, cm=config_means(tab), tab=tab)
-    fig_curves(s, os.path.join(FIGS, "fig2_Nret_vs_bits.png"), curve="R_soft", title="soft retention R_soft(b) = Σρ⁺(b)/Σρ⁺(fp32)")
+        fit = fit_slope_bootstrap(tab); print(f"{exp} R_live_95 on b_eff axis: slope {fit['slope']:.3f} [{fit['lo']:.3f},{fit['hi']:.3f}] n_cfg={fit['n_cfg']}")
+        out[("R_live_beff", 0.95)] = dict(fit=fit, cm=config_means(tab), tab=tab)
+    fig_curves(s, os.path.join(FIGS, "fig2_Nret_vs_bits.png"), curve="R_live", title="retention R_live(b) = Σ_{i live at fp32} ρ_i(b) / same at fp32")
     fig_curves(s, os.path.join(FIGS, "fig2b_hard_Nret_vs_bits.png"), curve="R_hard", title="hard retention N_ret(b)/N_ret(fp32), ρ ≥ 0.5")
     fig_translation(df, s, os.path.join(FIGS, "fig4_translation_vs_tilt.png"))
     return df, s, out

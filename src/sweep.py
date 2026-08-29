@@ -34,10 +34,10 @@ def groups_for(exp, args):
         for m in [10, 16]:
             for r in [4, 8, 16, 32, 64, 128]:
                 yield f"E1_m{m}_n{m*r}", m, m * r, specs_product(P_MAIN, BITS_MAIN, SEEDS), args.steps
-    elif exp == "E2":    # lattice controls: dithered + stochastic rounding (+ per-channel ablation), m=16
-        for r in [8, 16, 32, 64, 128]:
+    elif exp == "E2":    # lattice controls (QAT): dithered + stochastic rounding + per-channel, m=16 (reduced)
+        for r in [8, 32, 128]:
             yield (f"E2_m16_n{16*r}", 16, 16 * r,
-                   specs_product(P_MAIN, BITS_MAIN, SEEDS, modes=(MODE_DITHER, MODE_SR, MODE_PERCH, MODE_UNIFORM)),
+                   specs_product([0.005, 0.02], BITS_MAIN, [0, 1], modes=(MODE_DITHER, MODE_SR, MODE_PERCH, MODE_UNIFORM)),
                    args.steps)
     elif exp == "E5":    # power-law importance, prefix fraction
         for r in [8, 32]:
