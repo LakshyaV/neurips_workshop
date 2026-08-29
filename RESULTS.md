@@ -93,7 +93,9 @@ is run on 49k tokens; F_SAE(L) = live features (≥ 20 firings) / 768. SAE varia
   measuring superposition. The earlier "F̂ predicts nothing" null is therefore replaced, not just weakened.
 - Against the real count (matrices reading each block's residual: c_attn + c_fc, 24 uncensored): log2 σ_crit vs log2 F_SAE
   slope **+0.21 [0.03, 0.49]** (block-bootstrap CI), R² 0.16; joint fit log2 σ = −3.45 + 0.24·log2 κ + 0.24·log2 F_SAE.
-  Layers with more superposition are, if anything, slightly *more* tolerant of weight noise; the preregistered −½ is excluded.
+- **Depth confound (D5):** F_SAE is monotone in depth; depth alone explains R² 0.32 of σ_crit; joint fit gives −0.33·log2 F_SAE +
+  0.168·block; within blocks 0–5 the slope is −0.18, within 4–11 it is +0.91. With 12 blocks the F-dependence is **not identifiable
+  separately from depth**: no negative dependence is observed and the sign is undetermined. Reported as inconclusive.
 
 ## §5C — mixed precision on GPT-2 (held-out 49k tokens, all 48 matrices quantized jointly, per-channel RTN)
 ΔNLL (nats) at equal parameter-weighted average bits; κ-rule = b_i = c + log2 κ_eff,i; law = per-matrix
