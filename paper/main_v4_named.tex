@@ -19,12 +19,12 @@
 \setlength{\textfloatsep}{4pt}\setlength{\intextsep}{4pt}\setlength{\floatsep}{4pt}
 \setlength{\abovedisplayskip}{3pt}\setlength{\belowdisplayskip}{3pt}\setlength{\abovedisplayshortskip}{2pt}\setlength{\belowdisplayshortskip}{2pt}
 \makeatletter
-\renewcommand\section{\@startsection{section}{1}{\z@}{-1.1ex \@plus -0.4ex \@minus -0.2ex}{0.5ex \@plus 0.2ex}{\large\bfseries\raggedright}}
-\renewcommand\subsection{\@startsection{subsection}{2}{\z@}{-0.8ex \@plus -0.3ex \@minus -0.2ex}{0.4ex \@plus 0.1ex}{\normalsize\bfseries\raggedright}}
+\renewcommand\section{\@startsection{section}{1}{\z@}{-1.1ex \@plus -0.5ex \@minus -0.2ex}{0.55ex \@plus 0.2ex}{\large\bfseries\raggedright}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}{-0.8ex \@plus -0.4ex \@minus -0.2ex}{0.4ex \@plus 0.1ex}{\normalsize\bfseries\raggedright}}
 \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{0.8ex \@plus 0.3ex \@minus 0.2ex}{-1em}{\normalsize\bfseries}}
 \makeatother
 \setlist{nosep}
-\setlength{\parskip}{0pt plus 0.3pt}
+\setlength{\parskip}{0.0pt plus 0.5pt}
 \captionsetup{font=scriptsize}
 \graphicspath{{../figs/}}
 
@@ -245,6 +245,7 @@ depends on architecture and loss criterion; the GPT-2 feature count uses one SAE
 quantization; GPT-2 feature count and depth are collinear (D5). Weight bits need the $\sigma^*(\kappa)$ correction while activation bits do not (unexplained). In short: superposition is free to quantize, bits are set by outliers, and the weakest features
 go first, predictably.
 
+\clearpage
 \begin{thebibliography}{9}\small
 \bibitem{elhage2022toy} N.~Elhage et al. Toy models of superposition. \emph{Transformer Circuits Thread}, 2022.
 \bibitem{hooker2019} S.~Hooker, A.~Courville, G.~Clark, Y.~Dauphin, A.~Frome. What do compressed deep neural networks forget? arXiv:1911.05248, 2019.
