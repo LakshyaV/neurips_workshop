@@ -17,3 +17,4 @@ Consider using tensor.detach() first. (Triggered internally at /Users/runner/wor
   [E6 m=16 n=1024 K=256] step  2000 loss 1005.0923 kappa(mean) 3.59  228s
   [E6 m=16 n=1024 K=256] step  3000 loss 1002.1566 kappa(mean) 3.63  345s
   [E6 m=16 n=1024 K=256] step  4000 loss 1014.4000 kappa(mean) 3.65  459s
+  [E6 m=16 n=1024 K=256] step  5000 loss 1006.5219 kappa(mean) 3.66  571s

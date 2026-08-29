@@ -13,3 +13,5 @@ results/*_trainlog.parquet
 paper/*.aux
 paper/*.log
 paper/tectonic_test.log
+results/*.parquet
+results/*.npy
