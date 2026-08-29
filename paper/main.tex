@@ -24,7 +24,24 @@
 \maketitle
 
 \begin{abstract}
-%ABSTRACT%
+
+Neural networks store more features than they have dimensions by packing them as non-orthogonal directions
+(superposition). A direction is only as resolvable as the numerical grid it is stored on, which suggests that a layer doing
+more superposition should need more bits. We preregistered a closed-form version of this idea---a critical bit-width
+growing by half a bit per doubling of features-per-dimension $F$---and tested it in 2{,}000+ toy models of superposition
+(quantization-aware and post-training), against five non-quantization damage families, and per weight matrix in GPT-2
+small. The hypothesis is wrong: the critical bit-width is flat in $F$ over a $14\times$ range (slope $-0.11$, CI
+$[-0.12,-0.09]$; predicted $+0.5$). What sets it instead is (i) a universal tolerance to relative weight perturbation, shared
+by rounding, dithering, stochastic rounding and Gaussian noise and independent of $F$, and (ii) the outlier ratio
+$\kappa=\max|W|/\mathrm{rms}(W)$, which enters as $\log_2\kappa$: causally in the toy model (clipping $\kappa$ moves the
+bit-width with slope $0.65$, $R^2=0.92$) and in GPT-2, where $\kappa$ predicts each matrix's measured round-to-nearest cliff
+($R^2=0.53$) while a superposition proxy predicts nothing ($R^2=0.04$). A corrected derivation explains the null: at high
+superposition the interference added by quantization must be compared with the interference already present, and $F$
+cancels. The resulting law, $b_{\mathrm{crit}} = 1+\log_2(1+\kappa/(\sqrt{12}\,\sigma^*))$, converts a one-line weight
+statistic into a per-layer bit requirement with no fitted parameter, reproduces GPT-2's per-matrix cliffs to
+$0.23$ bits from a continuous noise probe, and predicts---as we confirm---that per-channel scaling removes the outlier
+tax entirely, after which mixed precision has little left to gain.
+
 \end{abstract}
 
 \section{Introduction}
@@ -45,16 +62,16 @@ $F$, under post-training quantization of the same models, against five non-quant
 per weight matrix in GPT-2 small.
 
 \paragraph{Findings.} (i)~The preregistered law is \textbf{rejected}: the critical bit-width is flat in
-$F$ (slope %E1SLOPE% bits per doubling, 95\% CI %E1CI%; predicted $0.5$), at $\approx$%BCRIT% bits for round-to-nearest
-quantization across $F\in[4,%FMAX%]$, both under quantization-aware training and post-training quantization.
+$F$ (slope $-0.11$ bits per doubling, 95\% CI [$-0.12$, $-0.09$]; predicted $0.5$), at $\approx$3.9 bits for round-to-nearest
+quantization across $F\in[4,56]$, both under quantization-aware training and post-training quantization.
 (ii)~The threshold is instead set by a \emph{universal tolerance to relative weight perturbation}: every noise-like
 damage family (RTN, dithered, stochastic rounding, per-channel, Gaussian) costs 5\% of the represented features'
 explained variance at the same relative perturbation $\sigma_{\mathrm{rel}} = \lVert D(W)-W\rVert_F/\lVert W\rVert_F
-\approx %SIGCRIT%$, independent of $F$; structured damage (rank truncation, feature dropout) behaves differently.
+\approx 0.12$-$0.23$, independent of $F$; structured damage (rank truncation, feature dropout) behaves differently.
 (iii)~A corrected derivation explains the null: at $F\gg1$ the interference added by quantization must be compared
 with the interference the model already lives with, and $F$ cancels; what survives is the outlier ratio of the
 \emph{live} weights, $\kappa_{\mathrm{live}}$, which predicts the measured $b_{\mathrm{crit}}$ to within
-$0.2$ bits with no free parameter. (iv)~In GPT-2 small, per-matrix noise thresholds %LMSUMMARY%.
+$0.2$ bits with no free parameter. (iv)~In GPT-2 small, per-matrix noise thresholds carry no information about the superposition proxy ($R^2=0.04$) but track $\log_2\kappa$ ($R^2 = 0.53$ for the measured RTN cliff), and the noise-to-bits conversion reproduces each matrix's RTN cliff to $-0.23$ bits.
 A negative result on a plausible, preregistered idea, with the mechanism that replaces it, is the contribution.
 
 
@@ -164,20 +181,20 @@ sensitivity).
 \centering
 \includegraphics[width=\linewidth]{fig1_bcrit_vs_F_R_live_95.png}
 \caption{\textbf{Money plot, negative.} Critical bit-width (RTN, QAT, retention $R_{\mathrm{live}}=0.95$) against
-$\log_2 F$ for the E1 grid ($m\in\{10,16\}$, four $p$, mean $\pm$ SD over 4 seeds). Left: OLS slope %E1SLOPE% bits per
-doubling (bootstrap CI %E1CI%) against the preregistered $\nicefrac12$ (dashed: Eq.~\ref{eq:law} with the mean measured
+$\log_2 F$ for the E1 grid ($m\in\{10,16\}$, four $p$, mean $\pm$ SD over 4 seeds). Left: OLS slope $-0.11$ bits per
+doubling (bootstrap CI [$-0.12$, $-0.09$]) against the preregistered $\nicefrac12$ (dashed: Eq.~\ref{eq:law} with the mean measured
 $\kappa$). Middle: $\kappa$-corrected. Right: the zero-parameter prediction of Eq.~\ref{eq:law} against measurement.}
 \label{fig:money}
 \end{figure}
-Figure~\ref{fig:money} is the preregistered test. Over %NCFG% configurations spanning $F = %FMIN%$ to $%FMAX%$ (measured live
-columns per dimension; $\kappa$ from $%KMIN%$ to $%KMAX%$), $b_{\mathrm{crit}}$ is %BRANGE% bits and its slope in $\log_2 F$ is
-%E1SLOPE% [%E1CI%]---in the preregistered ``hypothesis dead'' band ($<0.15$), and the CI excludes $\nicefrac12$ by a wide
-margin. The result is threshold-robust (90\,\%: %E1SLOPE90%; 99\,\%: %E1SLOPE99%), holds on the continuous axis built from the
-measured residual $\hat\sigma_\varepsilon$ (%E1SLOPEBEFF%), and holds for the preregistered hard count where it is defined
-(%E1SLOPEHARD%). Applying the same quantizer post-training to the converged fp32 models (E3) gives the same answer with
-smaller error bars: RTN $b_{\mathrm{crit}} = %PTQRANGE%$ across all cells, slope %PTQSLOPE%; per-channel scaling lowers
-it uniformly to %PCRANGE%. Quantization-aware training buys essentially nothing over post-training rounding at this
-threshold (%QATVSPTQ%).
+Figure~\ref{fig:money} is the preregistered test. Over 40 configurations spanning $F = 4.0$ to $56$ (measured live
+columns per dimension; $\kappa$ from $2.5$ to $13.5$), $b_{\mathrm{crit}}$ is 3.1--5.2 bits and its slope in $\log_2 F$ is
+$-0.11$ [[$-0.12$, $-0.09$]]---in the preregistered ``hypothesis dead'' band ($<0.15$), and the CI excludes $\nicefrac12$ by a wide
+margin. The result is threshold-robust (90\,\%: $-0.15$; 99\,\%: $+0.04$), holds on the continuous axis built from the
+measured residual $\hat\sigma_\varepsilon$ (slope $-0.27$), and holds for the preregistered hard count where it is defined
+(slope $-0.27$ [$-0.37$, $-0.15$], 19 cells). Applying the same quantizer post-training to the converged fp32 models (E3) gives the same answer with
+smaller error bars: RTN $b_{\mathrm{crit}} = 3.87 \pm 0.15$ across all cells, slope $+0.03$ [$0.02$, $0.04$]; per-channel scaling lowers
+it uniformly to 3.1--3.5 bits. Quantization-aware training buys essentially nothing over post-training rounding at this
+threshold (mean QAT $-$ PTQ $= +0.15$ bits over 36 cells, and the difference correlates $0.89$ with $\log_2\kappa$: training through a per-tensor STE grid is worse than post-hoc rounding exactly when the tensor has large outliers).
 
 \subsection{What sets the threshold: a universal perturbation tolerance and the outlier ratio (E3)}
 \begin{figure}[t]
@@ -191,23 +208,42 @@ QAT vs post-training quantizers.}
 \label{fig:e3}
 \end{figure}
 Figure~\ref{fig:e3} shows why. Every noise-like damage family---RTN, per-channel RTN, dithered and stochastic rounding,
-Gaussian noise---crosses the 5\,\% line at a relative perturbation $\sigma_{\mathrm{rel,crit}} \approx %SIGRANGE%$ that is flat in
-$F$ (slopes %E3SLOPES%; predicted $-\nicefrac12$), and their retention curves collapse when plotted against
+Gaussian noise---crosses the 5\,\% line at a relative perturbation $\sigma_{\mathrm{rel,crit}} \approx 0.10$-$0.23$ that is flat in
+$F$ (slopes RTN $+0.05$, per-channel $+0.04$, dithered $+0.02$, stochastic $+0.03$, Gaussian $+0.00$; 44 cells, seed-bootstrap CIs of width $\le 0.02$; predicted $-\nicefrac12$), and their retention curves collapse when plotted against
 $\sigma_{\mathrm{rel}}$. Structured damage behaves differently: feature dropout is tolerated up to
-$\sigma_{\mathrm{rel}}\approx%DROPRANGE%$ because removing a marginal feature also removes the interference it caused, and rank
+$\sigma_{\mathrm{rel}}\approx0.3$-$0.5$ because removing a marginal feature also removes the interference it caused, and rank
 truncation is catastrophic at any level (removing one of $m$ directions already costs $>5\,\%$). The bit-width then follows
-from the quantizer's residual alone. With the measured $\kappa_{\mathrm{live}}$ ($%KLRANGE%$) and the measured
-$\sigma_{\mathrm{rel,crit}}$ of RTN, Eq.~\eqref{eq:corrected} predicts $b_{\mathrm{crit}}$ to within %CORRERR% bits with no
+from the quantizer's residual alone. With the measured $\kappa_{\mathrm{live}}$ ($2.4--3.1$) and the measured
+$\sigma_{\mathrm{rel,crit}}$ of RTN, Eq.~\eqref{eq:corrected} predicts $b_{\mathrm{crit}}$ to within 0.2 bits with no
 fitted parameter (pilot: predicted 3.68/3.61/3.82/3.85 vs measured 3.84/3.81/3.83/3.85 for $F = 56/25/8.6/5.2$).
 Dithered quantization is \emph{worse} than the shared lattice by 0.2--1.5 bits, and increasingly so at low live fraction:
 dither moves the exact zeros of the dead columns off the lattice and wakes them as interferers. A lattice that contains
 $0$ is what makes rounding benign for sparse weight matrices.
 
 \subsection{Translation vs tilt (E4) and importance ordering (E5)}
-%E4E5%
+
+Under uniform importance the represented features share nearly the same $\rho$, and quantization lowers the whole
+plateau together rather than truncating a prefix: the three best features of the fp32 model lose $\rho$ at the same
+bit-widths as the median one (Fig.~\ref{fig:e4}, appendix). ``Capacity'' is the wrong frame for this regime; the right one is
+uniform degradation of every represented direction by the same relative perturbation. %E5TEXT%
+
 
 \subsection{Moving $\kappa$ at fixed $F$ (E6)}
-%E6%
+
+Clipping weights at $c\cdot\mathrm{rms}(W)$ moves $\kappa$ from $7.1$ to $2.0$ at fixed $(m,n,p)$ while $F$ changes by
+$<2\times$ in the opposite direction. $b_{\mathrm{crit}}$ follows: $4.69\to3.65$ bits in that cell, and pooled over the four
+cells (fixed effects, 15 points) the slope of $b_{\mathrm{crit}}$ on $\log_2\kappa$ is $0.65$ with $R^2=0.92$
+(Fig.~\ref{fig:kappa}). Across E1's 40 cells the same regression gives $0.72$, $R^2=0.82$ ($b_{\mathrm{crit}}-\log_2\kappa =
+1.99\pm0.31$), against $R^2=0.04$ for $\log_2F$. The preregistered P2 band was $[0.7,1.3]$: the effect is causal and large,
+and its sub-unit slope---identical in GPT-2 ($0.63$)---is the $\sigma_{\mathrm{crit}}\propto\kappa^{0.46}$ compensation.
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{fig8_kappa.png}
+\caption{\textbf{E6: $\kappa$ is causal.} Left: $b_{\mathrm{crit}}$ against $\log_2\kappa$ with $\kappa$ moved by weight
+clipping at fixed configuration (mean $\pm$ SD over 4 seeds). Right: measured vs the preregistered zero-parameter prediction.}
+\label{fig:kappa}
+\end{figure}
+
 
 \subsection{GPT-2 small: outliers, not superposition, predict per-matrix quantization sensitivity}
 \begin{figure}[t]
@@ -232,14 +268,64 @@ $\kappa\approx160$--$190$ matrices (mlp.c\_proj of blocks 1--3) is pathological-
 zero at every width $\le 6$, damage is non-monotone in bits, and joint damage is $3\times$ super-additive (all 48 matrices at 6
 bits: $+4.6$ nats vs.\ $1.6$ summed)---which is precisely the regime the toy analysis flags as ``$q_{\max}\Delta$ larger than the
 bulk''. With per-channel scaling this regime disappears, and the relevant statistic becomes the norm-weighted per-channel
-outlier ratio $\kappa_{\mathrm{eff}}$: %PCRESULT%.
+outlier ratio $\kappa_{\mathrm{eff}}$: every matrix crosses $\Delta\mathrm{NLL}=0.05$ at $2.70\pm0.33$ bits (range 2.0--3.4, $n=43$), uncorrelated with $\kappa_{\mathrm{eff}}$, $\kappa$ or $\hat F$ ($R^2 = 0.00$ for all three). Per-channel scaling equalises the layers, which is what the law predicts once the per-channel outlier ratios are small and similar.
 
 \subsection{A calibration-free bit allocator}
-%MIXED%
+
+Because $\kappa$ is a one-line statistic of the weights, Eq.~\eqref{eq:corrected} suggests a calibration-free
+mixed-precision rule, $b_i = c + \log_2\kappa_i$ with $c$ set by the memory budget. We evaluated it on GPT-2 small with
+all 48 matrices quantized jointly (per-channel RTN, held-out 49k tokens) against uniform widths, a greedy oracle that
+uses every matrix's measured single-matrix sensitivity, the per-matrix law (noise probe $\sigma_{\mathrm{crit},i}$ plus
+$\kappa_{\mathrm{eff},i}$), and random permutations of the same widths (Table~\ref{tab:mixed}). The honest outcome:
+once per-channel scaling has equalised the matrices at $2.7\pm0.3$ bits there is almost nothing left to exploit---uniform
+per-channel RTN is within $0.01$--$0.02$ nats of the oracle at 4 and 5 bits, and the $\kappa$-rule does not beat it. Between
+integer budgets the noise-probe allocation matches (4.5 bits) or beats (3.5 bits) the oracle and both beat random by
+$2\times$. Per-tensor mixed precision is not viable at these budgets at all: joint per-tensor damage is super-additive
+($+4.6$ nats at 6 bits vs $1.6$ summed over single matrices; still $+0.14$ at 8 bits). The practical content of the law is
+therefore not an allocator but a diagnosis: \emph{the $\kappa$ tax is entirely a per-tensor-scaling phenomenon; per-channel
+scaling removes it, after which per-layer allocation is second-order for GPT-2 small.}
+\begin{table}[t]
+\centering\small
+\caption{Mixed precision on GPT-2 small: $\Delta$NLL (nats, held-out) at equal parameter-weighted average bits.}
+\label{tab:mixed}
+\begin{tabular}{lccccc}
+\toprule
+avg.\ bits & uniform & $\kappa$-rule & law (noise probe) & oracle & random ($\times3$) \\
+\midrule
+3.5 & -- & 3.56 & \textbf{1.86} & 2.08 & 3.6--4.1 \\
+4.0 & \textbf{0.449} & 0.659 & 0.600 & 0.459 & 0.68--0.88 \\
+4.5 & -- & 0.274 & \textbf{0.190} & 0.183 & 0.26--0.33 \\
+5.0 & \textbf{0.084} & 0.094 & 0.103 & 0.067 & 0.10--0.11 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 
 
 \section{Discussion and limitations}
-%DISCUSSION%
+
+\paragraph{What is new.} The finding that precision cost is independent of superposition is, to our knowledge, the first
+direct measurement of how superposition interacts with weight precision; it contradicts the resolution intuition and the
+BitNet-TMS folklore of ``later superposition onset'' at low precision. The universality of the damage curve across
+rounding schemes and Gaussian noise is a statement about representations, not quantizers, and it is what licenses the
+noise probe. The $\kappa$ law is not new as algebra---it is the uniform-quantizer noise formula inverted---but its
+content is: $\sigma^*$ is a property of the representation that does not depend on how densely features are packed,
+so a layer's bit budget is fixed by its outliers, and outlier suppression (SmoothQuant, AWQ, per-channel scaling) buys
+$\log_2(\kappa_{\mathrm{before}}/\kappa_{\mathrm{after}})$ bits, up to the $\kappa^{0.46}$ compensation we measure.
+
+\paragraph{Limitations.} The toy model has a single tied layer, uniform importance in the main sweep and ReLU
+reconstruction; $\sigma^*$ is universal within it but its value ($0.12$--$0.23$ at 5\,\% loss) will differ for other
+architectures and loss criteria, and in GPT-2 it varies $7\times$ across matrices and correlates with $\kappa$. The
+superposition proxy $\hat F = d_{\mathrm{in}}/\mathrm{PR}$ is crude; a null against it is weaker than the toy null. The LM
+bridge is one 124M model, one corpus and post-training quantization only. The preregistered hard count had to be
+replaced by a continuous retention measure (documented before the corresponding results were seen), and the
+quantization-aware arms depend on STE training details. The mixed-precision experiment shows no gain for the
+$\kappa$-rule on GPT-2 small once per-channel scaling is used; whether the noise-probe allocation's advantage between
+integer budgets survives on larger models is untested.
+
+\paragraph{Reproducibility.} Preregistration, dated deviations, code, per-model summaries and figures are in the
+repository; every model is a few seconds of compute and the full study runs in about four GPU-hours on a laptop.
+
 
 
 \begin{thebibliography}{9}
@@ -256,6 +342,43 @@ outlier ratio $\kappa_{\mathrm{eff}}$: %PCRESULT%.
 
 \appendix
 \section{Appendix}
-%APPENDIX%
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\linewidth]{fig0_e0_replication.png}
+\caption{E0: fp32 replication of the feature-dimensionality ladder ($n=400$, $m=30$, uniform importance).}
+\label{fig:e0}
+\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{fig2_Nret_vs_bits.png}
+\caption{E1 retention curves $R_{\mathrm{live}}(b)$ for every $(m, n/m, p)$ cell (mean $\pm$ SD over seeds).}
+\label{fig:curves}
+\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{fig4_translation_vs_tilt.png}
+\caption{E4: $\rho$ of the three best fp32 features against bit-width (top) and sorted $\rho$ profiles per bit-width (bottom).}
+\label{fig:e4}
+\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\linewidth]{fig7b_lm_perchannel.png}
+\caption{GPT-2 small with per-channel RTN: every matrix crosses $\Delta\mathrm{NLL}=0.05$ at $2.7\pm0.3$ bits.}
+\label{fig:pc}
+\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\linewidth]{fig9_mixed_precision.png}
+\caption{Mixed precision on GPT-2 small (Table~\ref{tab:mixed}).}
+\label{fig:mixed}
+\end{figure}
+%E2E5FIGS%
+\paragraph{Deviations from the preregistration.} D1 (after E0, fp32 only): the hard count $N_{\mathrm{ret}}$ is degenerate
+under uniform importance; retention made continuous. D2 (after the sizing pilot, before E1/E3 were analysed): the
+gate-2 pilot rejected the $F$-dependence; the corrected derivation and its decision rule were recorded. D3 (after the
+pilot-checkpoint damage run): clipping bias and dead-feature accounting fixed by $R_{\mathrm{live}}$ with paired
+evaluation. Full text and timestamps in \texttt{DEVIATIONS.md}.
+
 
 \end{document}

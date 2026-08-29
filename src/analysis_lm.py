@@ -165,7 +165,7 @@ def run_mixed(path=os.path.join(RES, "lm_mixed.csv")):
     cols = {"uniform": COL["gray"], "kappa": COL["blue"], "law": COL["violet"], "oracle": COL["orange"]}
     for alloc, c in cols.items():
         g = d[d.alloc == alloc].sort_values("avg_bits")
-        if len(g): ax.errorbar(g.avg_bits, g.dnll, yerr=g.sem, fmt="-o", ms=4, lw=1.2, capsize=2, color=c, label=alloc)
+        if len(g): ax.errorbar(g.avg_bits, g.dnll, yerr=g["sem"], fmt="-o", ms=4, lw=1.2, capsize=2, color=c, label=alloc)
     r = d[d.alloc.str.startswith("random")]
     if len(r): ax.scatter(r.avg_bits, r.dnll, s=12, color=COL["red"], alpha=0.6, label="random (same widths as κ)", zorder=1)
     ax.set_yscale("log"); ax.set_xlabel("average bits per weight (parameter-weighted)"); ax.set_ylabel("ΔNLL on held-out tokens (nats)")
