@@ -5,6 +5,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
 \usepackage{url}
 \usepackage{booktabs}
 \usepackage{amsfonts,amsmath,amssymb}
@@ -86,7 +87,7 @@ models~\cite{hooker2019,hooker2020}.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.80\linewidth]{fig_hero.png}
+\includegraphics[width=0.88\linewidth]{fig_hero.png}
 \caption{\textbf{Overview of the three main results.} \textbf{(a)} Critical bit-width (RTN, QAT, 95\,\% retention; mean $\pm$ SD over 4 seeds) against measured
 features-per-dimension for the main sweep, with the preregistered law. \textbf{(b)} $b_{\mathrm{crit}}$ against
 $\log_2\kappa$: toy models with $\kappa$ moved by weight clipping at fixed configuration, and GPT-2's 48 matrices (each
