@@ -16,3 +16,4 @@ paper/tectonic_test.log
 results/*.parquet
 results/*.npy
 results/*.log
+results/sae/

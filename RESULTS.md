@@ -267,6 +267,44 @@ runner-up) and whether its prediction survives each condition. `src/lm_tokens.py
 - Same exponent family as the toy per-feature law (b_i = c − 0.52·log2 margin_i in variance units): the tail of the
   margin distribution is what a given precision deletes, half a bit or so per doubling of the margin.
 
+## §5E — GPT-2: which *internal features* are erased (sparse-autoencoder features, the per-feature law inside a real LM)
+SAE: `jbloom/GPT2-Small-SAEs-Reformatted`, `blocks.6.hook_resid_pre` (24,576 features on the 768-d residual stream entering
+block 6; sae_lens convention verified by reconstruction: 84 % variance explained, L0 ≈ 58 on our text, vs. < 0 for the
+wrong input conventions). 196,596 held-out WikiText-2 tokens in 128-token BOS-prefixed contexts (the SAE's training
+context). Blocks 0–5 (24 matrices) are damaged jointly — per-channel RTN at b ∈ {2, 3, 4, 5, 6, 8} or Gaussian noise at
+σ_rel ∈ {0.05, 0.1, 0.15, 0.2} — and every feature's activation pattern is compared with its fp32 pattern on the same tokens:
+ρ_f(b) = 1 − Σ_t (a_f^q − a_f^fp32)² / Σ_t (a_f^fp32)², retained if ρ_f ≥ 0.5. 22,499 features fire on ≥ 20 tokens (live).
+`src/lm_sae.py`, `src/analysis_sae.py`, `figs/fig11_sae_features.png`, `results/lm_sae_features.csv`.
+
+| condition | 2-bit | 3-bit | 4-bit | 5-bit | 6-bit | 8-bit | σ 0.05 | 0.1 | 0.15 | 0.2 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| live features retained (ρ_f ≥ 0.5) | 0.000 | 0.261 | 0.844 | 0.986 | 1.000 | 1.000 | 0.995 | 0.901 | 0.618 | 0.293 |
+| SAE variance explained on the damaged residual | < 0 | < 0 | 0.740 | 0.816 | 0.830 | 0.839 | 0.826 | 0.771 | 0.662 | 0.105 |
+
+**Which features go first: the weak ones.** Feature strength = rms contribution to the residual stream at fp32
+(activation × decoder norm, including zeros), in log2 bins:
+
+| log2 strength | n | mean critical bits | retained at 3-bit | 4-bit | 5-bit | 6-bit |
+|---|---|---|---|---|---|---|
+| −8 … −7 | 19 | 6.05 | 0.00 | 0.00 | 0.21 | 0.89 |
+| −7 … −6 | 171 | 5.49 | 0.00 | 0.04 | 0.56 | 0.96 |
+| −6 … −5 | 968 | 4.75 | 0.01 | 0.34 | 0.91 | 1.00 |
+| −5 … −4 | 2686 | 4.34 | 0.03 | 0.65 | 0.98 | 1.00 |
+| −4 … −3 | 6775 | 4.00 | 0.17 | 0.84 | 0.99 | 1.00 |
+| −3 … −2 | 8010 | 3.76 | 0.32 | 0.92 | 1.00 | 1.00 |
+| −2 … −1 | 3259 | 3.51 | 0.52 | 0.98 | 1.00 | 1.00 |
+| −1 … 0 | 572 | 3.34 | 0.67 | 1.00 | 1.00 | 1.00 |
+| > 0 | 38 | 3.2 | 0.76 | 1.00 | 1.00 | 1.00 |
+
+- Per feature (n = 22,499): b_f ~ log2 typical magnitude: **slope −0.37 [−0.38, −0.37], R² = 0.45**; vs log2 strength −0.31 (R² 0.26);
+  vs log2 frequency alone +0.13 (R² 0.14). Binned means: **slope −0.34, R² = 0.94**.
+- Magnitude, not rarity: b_f = 4.61 − 0.355·log2 magnitude + 0.019·log2 frequency.
+- Each extra bit shifts the loss curve by ≈ 1.5–2 log2-units of strength (left panel); Gaussian weight noise produces the
+  same family of curves (right panel) — universality holds inside the model.
+- Exponent family: toy per-feature −0.52 (variance-unit margin), GPT-2 tokens −0.39 (logit margin), GPT-2 SAE features
+  −0.34/−0.37 (residual magnitude): in every case a feature's critical bit-width falls by roughly a third to a half of a bit
+  per doubling of its margin/strength.
+
 ## Scoring PREDICTIONS.md
 | prediction | preregistered decision rule | outcome |
 |---|---|---|
