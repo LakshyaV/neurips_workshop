@@ -1,0 +1,10 @@
+level,bits,event,rate,auc_predictor,predictor,auc_baseline,baseline,n
+token,4,prediction flips,0.21810008665511266,0.7952902895412328,fp32 logit margin,0.5979575525382376,token rarity,18464
+token,5,prediction flips,0.08530112651646447,0.9099481676342356,fp32 logit margin,0.5550133222807745,token rarity,18464
+token,6,prediction flips,0.03856152512998267,0.949622546090708,fp32 logit margin,0.567164571739978,token rarity,18464
+SAE feature,3,feature erased,0.7391439619538647,0.8704341799360195,fp32 magnitude,0.2326336529562516,feature frequency,22499
+SAE feature,4,feature erased,0.15627361216054048,0.9084170843956725,fp32 magnitude,0.3574612624180776,feature frequency,22499
+SAE feature,5,feature erased,0.013778390150673362,0.9408886850357414,fp32 magnitude,0.504698637366088,feature frequency,22499
+toy feature,4,needs > 4 bits,0.08554778554778555,0.9176199052468466,fp32 margin,,,4290
+matrix (activations),5,needs > 5 activation bits,0.5208333333333334,0.9721739130434782,activation outlier ratio,0.6417391304347826,weight outlier ratio,48
+matrix (weights),4,needs > 4 weight bits,0.8333333333333334,0.671875,weight outlier ratio,0.621875,superposition proxy,48

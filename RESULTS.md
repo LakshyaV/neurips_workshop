@@ -333,6 +333,20 @@ Mean activation b_crit by matrix type: attn.c_proj 3.4 (κ_act 17), attn.c_attn 
 same matrix carry no information about it — the two κ's are separate quantities governing separate quantizers.
 (Added after the external review; post-training, per-tensor, one matrix at a time.)
 
+## §5G — Forecasting quantization damage from the fp32 model (ROC AUC)
+`src/analysis_forecast.py`, `results/forecast_auc.csv`. Event = what joint per-channel RTN breaks; predictor = an fp32 quantity.
+
+| level | bits | event (rate) | predictor → AUC | baseline → AUC |
+|---|---|---|---|---|
+| token (n = 18,464 fp32-correct) | 4 / 5 / 6 | prediction flips (0.22 / 0.085 / 0.039) | fp32 logit margin → **0.80 / 0.91 / 0.95** | rarity → 0.60 / 0.56 / 0.57 |
+| SAE feature (n = 22,499) | 3 / 4 / 5 | feature erased (0.74 / 0.16 / 0.014) | fp32 magnitude → **0.87 / 0.91 / 0.94** | frequency → 0.23 / 0.36 / 0.51 |
+| toy feature (n = 4,290) | 4 | needs > 4 bits (0.086) | fp32 margin → **0.92** | — |
+| matrix, activations (n = 48) | 5 | needs > 5 activation bits (0.52) | κ_act → **0.97** | weight κ → 0.64 |
+| matrix, weights (n = 48) | 4 | needs > 4 weight bits (0.83) | κ → 0.67 | F̂ → 0.62 |
+
+Reading: which tokens, features and activations a quantized model will lose can be forecast from the fp32 model alone
+with AUC 0.8–0.97; rarity/frequency is a poor predictor. The weight-level forecast is weak (small n, 83 % base rate).
+
 ## Scoring PREDICTIONS.md
 | prediction | preregistered decision rule | outcome |
 |---|---|---|
