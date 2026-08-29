@@ -15,3 +15,4 @@ paper/*.log
 paper/tectonic_test.log
 results/*.parquet
 results/*.npy
+results/*.log
