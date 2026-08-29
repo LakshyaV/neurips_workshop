@@ -85,7 +85,7 @@ features ($R^2=0.45$ per feature, $0.94$ binned, $n=22{,}499$).
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.50\linewidth]{fig_hero.png}
+\includegraphics[width=0.82\linewidth]{fig_hero.png}
 \caption{\textbf{Overview of the three main results.} \textbf{(a)} Critical bit-width (RTN, QAT, 95\,\% retention; mean $\pm$ SD over 4 seeds) against measured
 features-per-dimension for the main sweep, with the preregistered law. \textbf{(b)} $b_{\mathrm{crit}}$ against
 $\log_2\kappa$: toy models with $\kappa$ moved by weight clipping at fixed configuration, and GPT-2's 48 matrices (each
@@ -104,7 +104,7 @@ layer's weight and activation bit budgets through an $F$-independent tolerance, 
 \label{sec:background}
 
 \subsection{Toy models of superposition}
-We use the standard tied-weight toy model of superposition~\cite{elhage2022toy} (Figure~\ref{fig:pipeline}): $x\in\mathbb{R}^n$ with feature $i$ active
+We use the standard tied-weight toy model of superposition~\cite{elhage2022toy} (Figure~\ref{fig:pipeline}, appendix): $x\in\mathbb{R}^n$ with feature $i$ active
 with probability $p$ and value $\sim U[0,1]$; $h=Wx$, $W\in\mathbb{R}^{m\times n}$; $\hat x=\mathrm{ReLU}(W^\top h+b)$;
 squared-error loss with importance $I_i$. Writing $W_i$ for column $i$, $\hat x_i = \mathrm{ReLU}(\lVert W_i\rVert^2x_i +
 \sum_{j\neq i}(W_i^\top W_j)x_j + b_i)$: the sum is the interference superposition costs. Per feature we measure
@@ -112,31 +112,7 @@ $\rho_i = 1-\nu_i/\nu_i^0$ ($\nu_i$ the reconstruction error, $\nu_i^0$ that of 
 bit-width $b$ is $R(b) = \sum_{i\in\mathrm{live}}\rho_i(b)/\sum_{i\in\mathrm{live}}\rho_i(\infty)$ on identical samples,
 and $b_{\mathrm{crit}}$ is the interpolated width at which $R = 0.95$ ($b=2$ never fitted).
 
-\begin{figure}[t]
-\centering
-\scalebox{0.44}{\begin{tikzpicture}[
-  node distance=4mm and 6mm, >=Latex, font=\small,
-  box/.style={draw, rounded corners=2pt, minimum height=8mm, inner sep=4pt, align=center},
-  data/.style={box, fill=blue!6},
-  op/.style={box, fill=orange!10},
-  q/.style={box, fill=violet!10, dashed, text width=0.92\linewidth, align=left, font=\scriptsize}]
-  \node[data] (x) {$x\in\mathbb{R}^n$\\ \scriptsize sparse: $x_i\ne0$ w.p.\ $p$};
-  \node[op, right=of x] (W) {$h = Q(W)\,x$\\ \scriptsize $m<n$ dims};
-  \node[op, right=of W] (Wt) {$y = Q(W)^{\top}h + b$\\ \scriptsize tied weights};
-  \node[op, right=of Wt] (relu) {$\hat x = \mathrm{ReLU}(y)$};
-  \node[data, right=of relu] (loss) {$\mathcal L=\sum_i I_i (x_i-\hat x_i)^2$};
-  \draw[->] (x) -- (W); \draw[->] (W) -- (Wt); \draw[->] (Wt) -- (relu); \draw[->] (relu) -- (loss);
-  \node[q, below=6mm of $(x.south west)!0.5!(loss.south east)$, anchor=north] (quant) {\textbf{Fake quantizer $Q$} (applied once to $W$, used in both directions). Per-tensor RTN: $\Delta = \max|W|/q_{\max}$, $q_{\max}=2^{b-1}-1$, $Q(W)=\Delta\,\mathrm{round}(W/\Delta)$. Variants: dithered lattice, stochastic rounding, per-channel scale; post-hoc damage families: Gaussian noise, rank truncation, feature dropout. Training through $Q$ uses a straight-through estimator (QAT); alternatively $Q$ is applied to the converged fp32 model (PTQ).};
-  \draw[->, dashed, violet!70!black] (quant.north) -- ++(0,2mm) -| (W.south);
-  \draw[->, dashed, violet!70!black] (quant.north) -- ++(0,2mm) -| (Wt.south);
-\end{tikzpicture}}
-\caption{\textbf{The toy model and the quantization pipeline.} A sparse feature vector is compressed through $W$ into $m<n$
-dimensions and reconstructed with the same (tied) weights; the interference term $\sum_{j\ne i}(W_i^\top W_j)x_j$ is the price
-of superposition. The fake quantizer $Q$ replaces $W$ in both directions; under QAT gradients pass through it with a
-straight-through estimator, under PTQ it is applied once to a converged model. Every quantity used in the analysis is
-measured on the resulting model.}
-\label{fig:pipeline}
-\end{figure}
+
 
 The quantizer is per-tensor symmetric round-to-nearest (RTN), $q_{\max}=2^{b-1}-1$, $\Delta=\max|W|/q_{\max}$, applied
 once to $W$ and used in both directions, trained through a straight-through estimator (QAT) or applied post-training (PTQ);
@@ -356,6 +332,31 @@ live if firing on $\ge20$ tokens. Compute: about four GPU-hours on one laptop.
 
 
 \section{Experimental design and additional figures}
+\begin{figure}[h]
+\centering
+\scalebox{0.9}{\begin{tikzpicture}[
+  node distance=4mm and 6mm, >=Latex, font=\small,
+  box/.style={draw, rounded corners=2pt, minimum height=8mm, inner sep=4pt, align=center},
+  data/.style={box, fill=blue!6},
+  op/.style={box, fill=orange!10},
+  q/.style={box, fill=violet!10, dashed, text width=0.92\linewidth, align=left, font=\scriptsize}]
+  \node[data] (x) {$x\in\mathbb{R}^n$\\ \scriptsize sparse: $x_i\ne0$ w.p.\ $p$};
+  \node[op, right=of x] (W) {$h = Q(W)\,x$\\ \scriptsize $m<n$ dims};
+  \node[op, right=of W] (Wt) {$y = Q(W)^{\top}h + b$\\ \scriptsize tied weights};
+  \node[op, right=of Wt] (relu) {$\hat x = \mathrm{ReLU}(y)$};
+  \node[data, right=of relu] (loss) {$\mathcal L=\sum_i I_i (x_i-\hat x_i)^2$};
+  \draw[->] (x) -- (W); \draw[->] (W) -- (Wt); \draw[->] (Wt) -- (relu); \draw[->] (relu) -- (loss);
+  \node[q, below=6mm of $(x.south west)!0.5!(loss.south east)$, anchor=north] (quant) {\textbf{Fake quantizer $Q$} (applied once to $W$, used in both directions). Per-tensor RTN: $\Delta = \max|W|/q_{\max}$, $q_{\max}=2^{b-1}-1$, $Q(W)=\Delta\,\mathrm{round}(W/\Delta)$. Variants: dithered lattice, stochastic rounding, per-channel scale; post-hoc damage families: Gaussian noise, rank truncation, feature dropout. Training through $Q$ uses a straight-through estimator (QAT); alternatively $Q$ is applied to the converged fp32 model (PTQ).};
+  \draw[->, dashed, violet!70!black] (quant.north) -- ++(0,2mm) -| (W.south);
+  \draw[->, dashed, violet!70!black] (quant.north) -- ++(0,2mm) -| (Wt.south);
+\end{tikzpicture}}
+\caption{\textbf{The toy model and the quantization pipeline.} A sparse feature vector is compressed through $W$ into $m<n$
+dimensions and reconstructed with the same (tied) weights; the interference term $\sum_{j\ne i}(W_i^\top W_j)x_j$ is the price
+of superposition. The fake quantizer $Q$ replaces $W$ in both directions; under QAT gradients pass through it with a
+straight-through estimator, under PTQ it is applied once to a converged model. Every quantity used in the analysis is
+measured on the resulting model.}
+\label{fig:pipeline}
+\end{figure}
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}[
