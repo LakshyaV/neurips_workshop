@@ -24,7 +24,7 @@ seed-noisy (p=0.1: 74 vs 109 across two seeds with identical live-column counts 
 sets an added-interference variance equal to a fixed fraction of the explainable variance, and any fixed
 fraction shifts only the intercept. Decision bands in PREDICTIONS.md apply unchanged to the soft-count slope.
 
-## D2 (2026-08-29 12:35, after the gate-2 pilot at m=16, n=2048, before E1/E3 results were analyzed)
+## D2 (2026-08-29 12:31, after the gate-2 pilot at m=16, n=2048, before E1/E3 results were analyzed)
 
 **Evidence (pilot, m=16, n=2048, 8000 steps, 4 seeds, QAT):** the models are at capacity for every p
 (live fraction k/n = 0.44/0.20/0.07/0.04 at p = 0.002/0.005/0.02/0.05; F = 55.9/25.3/8.6/5.2; κ = 4.8/6.2/10.3/13.5),
