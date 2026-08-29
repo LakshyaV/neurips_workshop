@@ -83,7 +83,7 @@ features ($R^2=0.45$ per feature, $0.94$ binned, $n=22{,}499$). This is a candid
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.66\linewidth]{fig_hero.png}
+\includegraphics[width=0.60\linewidth]{fig_hero.png}
 \caption{\textbf{Overview of the three main results.} \textbf{(a)} Critical bit-width (RTN, QAT, 95\,\% retention; mean $\pm$ SD over 4 seeds) against measured
 features-per-dimension for the main sweep, with the preregistered law. \textbf{(b)} $b_{\mathrm{crit}}$ against
 $\log_2\kappa$: toy models with $\kappa$ moved by weight clipping at fixed configuration, and GPT-2's 48 matrices (each
@@ -261,13 +261,12 @@ more than 5 activation bits with AUC $0.97$ (weight $\kappa$: $0.64$). Once cali
 
 \section{Conclusion}
 
-Table~\ref{tab:key} (appendix) collects the numbers; the $\kappa$ law is the uniform-quantizer noise formula inverted; its content is that $\sigma^*$ does not depend on
-how densely features are packed, so a layer's bit budget is fixed by its outliers and outlier suppression buys
-$\log_2(\kappa_{\mathrm{before}}/\kappa_{\mathrm{after}})$ bits, up to the $\kappa^{0.46}$ compensation we measure.
+Table~\ref{tab:key} (appendix) collects the numbers. The $\kappa$ law is the uniform-quantizer noise formula inverted; its content is
+that $\sigma^*$ does not depend on how densely features are packed, so a layer's bit budget is fixed by its outliers and
+outlier suppression buys $\log_2(\kappa_{\mathrm{before}}/\kappa_{\mathrm{after}})$ bits.
 Limitations: one tied toy layer with uniform importance in the main sweep; $\sigma^*$ is $F$-independent but its value
-depends on architecture and loss criterion; one 124M model, one corpus, one SAE layer, post-training only, untested
-at scale and under joint weight-plus-activation quantization. Weight bits need the $\sigma^*(\kappa)$ correction (slope $0.63$) while activation bits follow
-$\kappa_{\mathrm{act}}$ with slope $1.12$ and no visible co-variation; we cannot yet explain the difference. The per-feature law and the activation arm are exploratory (Appendix~\ref{app:score}). In short: superposition is free to quantize, bits are set by outliers, and a model loses its weakest features first, predictably.
+depends on architecture and loss criterion; one 124M model, one corpus, one SAE layer, post-training only. Weight bits need the $\sigma^*(\kappa)$ correction (slope $0.63$) while activation bits follow
+$\kappa_{\mathrm{act}}$ with slope $1.12$ and no visible co-variation; we cannot yet explain the difference. The per-feature law and the activation arm are exploratory. In short: superposition is free to quantize, bits are set by outliers, and a model loses its weakest features first, predictably.
 
 \begin{thebibliography}{9}\small
 \bibitem{elhage2022toy} N.~Elhage et al. Toy models of superposition. \emph{Transformer Circuits Thread}, 2022.
