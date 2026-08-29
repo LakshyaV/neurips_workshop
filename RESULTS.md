@@ -316,6 +316,23 @@ context). Blocks 0–5 (24 matrices) are damaged jointly — per-channel RTN at 
   −0.34/−0.37 (residual magnitude): in every case a feature's critical bit-width falls by roughly a third to a half of a bit
   per doubling of its margin/strength.
 
+## §5F — GPT-2: activation quantization (the outlier law on the quantity the folklore is about)
+For each of the 48 matrices alone, the *input activations* are fake-quantized with per-tensor symmetric RTN (scale =
+absmax over the 49k calibration tokens) at b ∈ {3, 4, 5, 6, 8}; ΔNLL on the same tokens; κ_act = max|x|/rms(x) over the
+calibration tokens (range 10–382; mlp.c_proj inputs are the most outlier-heavy). `src/lm_act.py`, `src/analysis_act.py`,
+`figs/fig12_activation_kappa.png`, `results/lm_act_thresholds.csv`.
+
+| regressor (42 interpolable matrices) | slope | 95 % CI | R² |
+|---|---|---|---|
+| **log2 κ_act** | **1.12** | [0.91, 1.39] | **0.73** |
+| log2 κ_w (weight outlier ratio of the same matrix) | 0.35 | [−0.01, 0.58] | 0.12 |
+| joint: b_act = −0.31 + 1.25·log2 κ_act − 0.18·log2 κ_w | | | |
+
+Mean activation b_crit by matrix type: attn.c_proj 3.4 (κ_act 17), attn.c_attn 4.5 (21), mlp.c_fc 5.5 (42), mlp.c_proj 6.2
+(89). Activation outliers set activation bits with the naive slope of 1 (the CI includes 1), and the weight outliers of the
+same matrix carry no information about it — the two κ's are separate quantities governing separate quantizers.
+(Added after the external review; post-training, per-tensor, one matrix at a time.)
+
 ## Scoring PREDICTIONS.md
 | prediction | preregistered decision rule | outcome |
 |---|---|---|

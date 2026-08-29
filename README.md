@@ -27,6 +27,6 @@ python -m src.sweep --exp E1 --steps 6000
 python -m src.damage                    # E3 on the E1 fp32 checkpoints
 python -m src.sweep --exp E2 --steps 6000; python -m src.sweep --exp E5 --steps 6000; python -m src.sweep --exp E6 --steps 6000
 python -m src.lm_eval                   # GPT-2 small per-matrix sweep (add --families rtn_pc for per-channel)
-python -m src.lm_mixed; python -m src.lm_tokens; python -m src.lm_sae   # mixed precision; per-token and per-SAE-feature critical bits
-python -m src.analysis E1; python -m src.analysis2 E3; python -m src.analysis_lm noise; python -m src.analysis_lm pc; python -m src.analysis_lm mixed; python -m src.analysis_tokens; python -m src.analysis_sae; python -m src.analysis2 E2; python -m src.analysis2 E5; python -m src.analysis2 E6
+python -m src.lm_mixed; python -m src.lm_tokens; python -m src.lm_sae; python -m src.lm_act   # mixed precision; per-token, per-SAE-feature, activation arms
+python -m src.analysis E1; python -m src.analysis2 E3; python -m src.analysis_lm noise; python -m src.analysis_lm pc; python -m src.analysis_lm mixed; python -m src.analysis_tokens; python -m src.analysis_sae; python -m src.analysis_act; python -m src.analysis2 E2; python -m src.analysis2 E5; python -m src.analysis2 E6
 ```

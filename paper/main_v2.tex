@@ -31,10 +31,9 @@ toy models of superposition, against five non-quantization damage families, and 
 the critical bit-width is flat in $F$ over a $14\times$ range (slope $-0.11$, CI $[-0.12,-0.09]$). What sets it is a
 tolerance to relative weight perturbation that is independent of $F$ and shared, within a factor of two, by rounding,
 dithering, stochastic rounding and Gaussian noise, together with the outlier ratio $\kappa=\max|W|/\mathrm{rms}(W)$, which
-enters as $\log_2\kappa$---causally in the toy model (clipping $\kappa$ moves the bit-width, $R^2=0.92$) and across
-GPT-2's 48 matrices ($R^2=0.53$), with a slope of $0.6$--$0.7$ rather than $1$; the tolerance's own $\kappa$-dependence,
-measured from a quantizer-free noise arm, predicts $0.54$ [$0.35$, $0.71$] against the independently measured $0.63$
-[$0.49$, $0.75$]. In an exploratory follow-up the half-bit-per-doubling exponent reappears one level down: a feature's critical
+enters as $\log_2\kappa$---causally in the toy model (clipping $\kappa$ moves the bit-width, $R^2=0.92$), across GPT-2's 48 weight matrices
+($R^2=0.53$, slope $0.6$--$0.7$, of which a quantizer-free noise arm predicts $0.54$ [$0.35$, $0.71$]) and for their input
+activations, where the activation outlier ratio sets activation bits with slope $1.12$ [$0.91$, $1.39$], $R^2=0.73$. In an exploratory follow-up the half-bit-per-doubling exponent reappears one level down: a feature's critical
 bit-width follows its own fp32 margin, in the toy model ($R^2=0.68$, 4{,}290 features), for GPT-2's next-token predictions
 (logit margin, not rarity; $R^2 = 0.23$ per token, $0.90$ binned) and for 22{,}499 sparse-autoencoder features ($R^2=0.45$
 per feature, $0.94$ binned). Quantization deletes a model's weakest features first, in an order that a one-number
@@ -64,9 +63,10 @@ shared within $2\times$ by five damage families, and the outlier ratio $\kappa$,
 in the toy model (clipping $\kappa$ at fixed configuration moves $b_{\mathrm{crit}}$ with $R^2=0.92$) and in GPT-2's 48
 matrices ($R^2=0.53$). The tolerance itself grows as $\kappa^{0.46}$ (measured with Gaussian noise, no quantizer involved), which predicts an
 RTN slope of $0.54$ [$0.35$, $0.71$]; the RTN slope measured independently is $0.63$ [$0.49$, $0.75$]---consistent within
-error, with the prediction $0.1$ low. Per-channel
-scaling removes the $\kappa$ tax entirely (all 48 matrices at $2.7\pm0.3$ bits), and a $\kappa$-based bit allocator
-therefore does not beat uniform per-channel quantization---the mechanism is a diagnosis, not an allocator.
+error, with the prediction $0.1$ low. The same law holds for
+activations: each matrix's activation bit-width follows its activation outlier ratio with slope $1.12$ [$0.91$, $1.39$],
+$R^2=0.73$ (App.~\ref{app:lm}). Per-channel scaling removes the weight-$\kappa$ tax entirely (all 48 matrices at
+$2.7\pm0.3$ bits), so a $\kappa$-based allocator does not beat uniform per-channel quantization.
 \item \textbf{A per-feature law (exploratory, not preregistered).} The half-bit-per-doubling exponent is real at the
 feature level: a feature's critical bit-width follows its fp32 margin, in toy models ($R^2=0.68$), for GPT-2 next-token
 predictions (margin beats rarity; $R^2=0.23$ per token, $0.90$ binned) and for GPT-2's internal sparse-autoencoder
@@ -193,6 +193,7 @@ question & quantity & result & prereg.\\\midrule
 does $F$ set bits? & $b_{\mathrm{crit}}$ slope in $\log_2F$, QAT / PTQ & $-0.11$ [$-0.12,-0.09$] / $+0.03$ [$0.02,0.04$] & $+0.5$\\
 does $\kappa$ set bits? & within-cell slope in $\log_2\kappa$, $\kappa$ clipped (E6) & $0.65$, $R^2=0.92$ & $1$\\
  & GPT-2 RTN cliff vs $\log_2\kappa$ / vs $\log_2\hat F$ & $0.63$, $R^2=0.53$ / $0.28$, $R^2=0.14$ & --\\
+ & GPT-2 activation bits vs $\log_2\kappa_{\mathrm{act}}$ / vs $\log_2\kappa_w$ & $1.12$ [$0.91,1.39$], $R^2=0.73$ / $0.35$, $R^2=0.12$ & $1$\\
 universal tolerance? & $\sigma_{\mathrm{rel,crit}}$ slope in $\log_2F$, five noise families & $0.00$ to $0.05$ & $-0.5$\\
 which features die? (exploratory) & toy: $b_i$ vs $\log_2$ margin ($n=4290$) & $-0.52$, $R^2=0.68$ & --\\
  & GPT-2 tokens: $b_t$ vs $\log_2$ logit margin & $-0.34$ ($R^2$ 0.23 per token; $-0.39$, 0.90 binned) & --\\
@@ -212,9 +213,8 @@ the standard uniform-quantizer noise relation inverted; its content is the measu
 The toy model is one tied layer with uniform importance in the main sweep; $\sigma^*$ is universal within it but its value
 depends on architecture and loss criterion, and in GPT-2 it varies $7\times$ across matrices. The superposition proxy
 $\hat F$ is crude, so the GPT-2 null against it is weaker than the toy null. The LM evidence is one 124M model, one
-corpus, one SAE layer, post-training only; whether the laws hold at 7B scale is untested. We quantize weights; the
-activation-outlier phenomena behind LLM.int8 and SmoothQuant are a separate question (an activation arm is in
-App.~\ref{app:lm}). The per-feature law is exploratory. The $\kappa$ slope is $\sim0.65$, not $1$; the noise-arm account of the shortfall is
+corpus, one SAE layer, post-training only; whether the laws hold at 7B scale is untested. The activation arm is post-training, per-tensor and one matrix at a time; joint weight-plus-activation
+quantization is untested. The per-feature law is exploratory. The $\kappa$ slope is $\sim0.65$, not $1$; the noise-arm account of the shortfall is
 consistent within error but its central value is $0.1$ low, so part of the gap is unexplained. The preregistered hard count had to
 be replaced by a continuous retention measure (documented before the affected results were seen, App.~\ref{app:deviations}).
 What survives is simple and testable: superposition is free to quantize; a layer's bit budget is set by its outliers;
@@ -266,7 +266,16 @@ independent measurements, so predicting one from the other through Eq.~\eqref{eq
 At $\Delta\mathrm{NLL}=0.02$ the noise-arm exponent is $0.57$ [$0.32$, $0.89$], predicting an RTN slope of $0.43$
 [$0.11$, $0.68$] against the measured $0.59$ [$0.35$, $0.80$] (difference $+0.16$ [$-0.02$, $+0.37$]). Per-tensor RTN on the three $\kappa\approx160$--$190$ matrices
 is pathological (non-monotone in bits; joint damage $3\times$ super-additive), which is why all joint experiments use
-per-channel scaling. \emph{Mixed precision:} allocations at equal parameter-weighted budgets on held-out tokens
+per-channel scaling. \emph{Activation arm:} for each matrix alone, its input activations are fake-quantized with per-tensor symmetric
+RTN (scale from the absmax over the 49k calibration tokens) at 3--8 bits; $\kappa_{\mathrm{act}} = \max|x|/\mathrm{rms}(x)$
+over the same tokens ranges from $10$ to $382$ (mlp.c\_proj inputs are the most outlier-heavy). The activation
+$b_{\mathrm{crit}}$ ($\Delta\mathrm{NLL}=0.05$; 42 of 48 interpolable) follows $\log_2\kappa_{\mathrm{act}}$ with slope
+$1.12$ [$0.91$, $1.39$], $R^2=0.73$ (Fig.~\ref{fig:act}), whereas the weight $\kappa$ of the same matrix does not predict it
+($R^2=0.12$; joint fit $-0.31 + 1.25\log_2\kappa_{\mathrm{act}} - 0.18\log_2\kappa_w$). The naive slope of $1$ holds for
+activations, where the tolerance does not visibly co-vary with the outlier ratio.
+\begin{figure}[h]\centering\includegraphics[width=0.6\linewidth]{fig12_activation_kappa.png}
+\caption{GPT-2 small: per-matrix activation bit-width against the activation outlier ratio.}\label{fig:act}\end{figure}
+\emph{Mixed precision:} allocations at equal parameter-weighted budgets on held-out tokens
 (Table~\ref{tab:mixed}). \emph{Tokens:} per-token fp32 logit margin and survival under joint quantization.
 \emph{SAE:} \texttt{jbloom/GPT2-Small-SAEs-Reformatted}, \texttt{blocks.6.hook\_resid\_pre}, applied to the
 mean-centred HF residual stream with the decoder bias subtracted (84\,\% variance explained, $L_0\approx58$; the
