@@ -12,7 +12,8 @@ both under quantization-aware training (E1) and post-training quantization of th
 What sets the threshold is (a) a tolerance to *relative weight perturbation* that is independent of F and shared within
 ~2× by every noise-like damage family (σ_rel,crit ≈ 0.10–0.23 in the toy; it is **not** a universal constant: in GPT-2 it
 varies 7× across matrices and grows as κ^0.46), and (b) the outlier ratio κ, entering as log2 κ with a slope of 0.6–0.7 —
-which is what Eq. (D2) predicts once the measured σ*(κ) ∝ κ^0.46 is substituted (1 − 0.46 = 0.54). The per-feature
+for which the quantizer-free noise arm's σ* ∝ κ^0.46 predicts 0.54 [0.35, 0.71] against the independently measured
+0.63 [0.49, 0.75] — consistent within error, prediction 0.1 low (see §5A). The per-feature
 margin law (E5, §5D, §5E) is **exploratory** — found after the preregistered analyses — and is labelled as such.
 Scoring of every preregistered prediction is at the end.
 
@@ -230,6 +231,13 @@ W + σ_rel·rms(W)·z on 9 log-spaced σ_rel ∈ [0.03, 0.75]; discrete axis: RT
 | b_crit,equiv = 1 + log2(1 + κ/(√12 σ_crit)) vs log2 κ | 0.73 | [0.55, 0.83] | 0.67 | 42 |
 | measured RTN b_crit vs b_crit,equiv (noise → bits conversion) | 0.92 | | 0.68 | 34 |
 | log2 σ_crit vs log2 κ | 0.46 | [0.30, 0.65] | 0.35 | 34 |
+
+**Non-circular test of the sub-unit κ slope.** σ_crit is measured from the Gaussian-noise arm (no quantizer); across
+matrices σ_crit ∝ κ^e with e = 0.46 [0.29, 0.65] (ΔNLL 0.05; 0.57 [0.32, 0.89] at 0.02). Substituting into the law predicts
+an RTN slope of 1 − e = 0.54 [0.35, 0.71] (0.43 [0.11, 0.68] at 0.02); the slope measured independently from the RTN arm is
+0.63 [0.49, 0.75] (0.59 [0.35, 0.80]); paired difference measured − predicted = +0.09 [−0.05, +0.26] (+0.16 [−0.02, +0.37]).
+Consistent within error; the prediction's central value is 0.1–0.16 low, so the σ*(κ) account explains part, not all, of
+the shortfall from slope 1.
 
 Reading: the per-matrix damage threshold carries no information about the superposition proxy (R² ≤ 0.04 at every
 threshold), while κ predicts the *independently measured* RTN bit-width with R² = 0.53 and the noise-equivalent

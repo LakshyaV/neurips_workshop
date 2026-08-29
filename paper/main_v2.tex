@@ -32,8 +32,9 @@ the critical bit-width is flat in $F$ over a $14\times$ range (slope $-0.11$, CI
 tolerance to relative weight perturbation that is independent of $F$ and shared, within a factor of two, by rounding,
 dithering, stochastic rounding and Gaussian noise, together with the outlier ratio $\kappa=\max|W|/\mathrm{rms}(W)$, which
 enters as $\log_2\kappa$---causally in the toy model (clipping $\kappa$ moves the bit-width, $R^2=0.92$) and across
-GPT-2's 48 matrices ($R^2=0.53$), with a slope of $0.6$--$0.7$ that the measured $\kappa$-dependence of the tolerance
-predicts. In an exploratory follow-up the half-bit-per-doubling exponent reappears one level down: a feature's critical
+GPT-2's 48 matrices ($R^2=0.53$), with a slope of $0.6$--$0.7$ rather than $1$; the tolerance's own $\kappa$-dependence,
+measured from a quantizer-free noise arm, predicts $0.54$ [$0.35$, $0.71$] against the independently measured $0.63$
+[$0.49$, $0.75$]. In an exploratory follow-up the half-bit-per-doubling exponent reappears one level down: a feature's critical
 bit-width follows its own fp32 margin, in the toy model ($R^2=0.68$, 4{,}290 features), for GPT-2's next-token predictions
 (logit margin, not rarity; $R^2 = 0.23$ per token, $0.90$ binned) and for 22{,}499 sparse-autoencoder features ($R^2=0.45$
 per feature, $0.94$ binned). Quantization deletes a model's weakest features first, in an order that a one-number
@@ -51,8 +52,8 @@ would convert a mechanistic quantity into an engineering one (a critical bit-wid
 of the weight-outlier counterpart of the folklore that outliers make layers hard to quantize~\cite{dettmers2022,xiao2023,lin2024awq}.
 
 We made the intuition precise and \emph{preregistered} it (Sec.~\ref{sec:setup}): $b_{\mathrm{crit}} = 1 +
-\log_2(1+\kappa\sqrt{F/3})$, i.e.\ half a bit per doubling of $F$, with decision bands, controls and a real-model bridge
-committed before any experiment ran. Then we tested it. Our contributions:
+\log_2(1+\kappa\sqrt{F/3})$, half a bit per doubling of $F$, with decision bands, controls and a real-model bridge committed
+before any experiment ran. Our contributions:
 \begin{itemize}\setlength\itemsep{1pt}
 \item \textbf{The intuition is wrong.} Across 40 toy configurations spanning $F = 4$--$56$, under both
 quantization-aware and post-training quantization, the critical bit-width is flat in $F$ (slope $-0.11$
@@ -61,7 +62,9 @@ at high $F$ the interference quantization adds must be compared with the interfe
 \item \textbf{What sets the bit-width.} A tolerance to relative weight perturbation that is independent of $F$ and
 shared within $2\times$ by five damage families, and the outlier ratio $\kappa$, which enters as $\log_2\kappa$: causally
 in the toy model (clipping $\kappa$ at fixed configuration moves $b_{\mathrm{crit}}$ with $R^2=0.92$) and in GPT-2's 48
-matrices ($R^2=0.53$). The tolerance itself grows as $\kappa^{0.46}$, which predicts the observed sub-unit slope. Per-channel
+matrices ($R^2=0.53$). The tolerance itself grows as $\kappa^{0.46}$ (measured with Gaussian noise, no quantizer involved), which predicts an
+RTN slope of $0.54$ [$0.35$, $0.71$]; the RTN slope measured independently is $0.63$ [$0.49$, $0.75$]---consistent within
+error, with the prediction $0.1$ low. Per-channel
 scaling removes the $\kappa$ tax entirely (all 48 matrices at $2.7\pm0.3$ bits), and a $\kappa$-based bit allocator
 therefore does not beat uniform per-channel quantization---the mechanism is a diagnosis, not an allocator.
 \item \textbf{A per-feature law (exploratory, not preregistered).} The half-bit-per-doubling exponent is real at the
@@ -139,9 +142,9 @@ at a time, App.~\ref{app:lm}) the noise threshold has no relation to a superposi
 $\sigma_{\mathrm{rel}} = \lVert D(W)-W\rVert_F/\lVert W\rVert_F$: RTN, per-channel RTN, dithered and stochastic rounding
 and Gaussian noise all cost 5\,\% of the represented features' explained variance at $\sigma_{\mathrm{rel}}\approx
 0.10$--$0.23$, flat in $F$ (slopes $0.00$--$0.05$ against the predicted $-\nicefrac12$; 44 cells), and their retention
-curves collapse against $\sigma_{\mathrm{rel}}$. Structured damage differs (feature dropout tolerated to $0.3$--$0.5$;
-rank truncation catastrophic). The tolerance is $1.26\times$ larger at $m=16$ than $m=10$ ($\sqrt{16/10}$): the dominant
-damage is the perturbation of each feature's own direction, not cross-talk.
+curves collapse against $\sigma_{\mathrm{rel}}$. Structured damage differs (dropout tolerated to $0.3$--$0.5$; rank truncation catastrophic). The tolerance is
+$1.26\times$ larger at $m=16$ than $m=10$ ($\sqrt{16/10}$): the dominant damage is to each feature's own direction, not
+cross-talk.
 
 \textbf{Outliers set the bit-width (E6, GPT-2).} Across the sweep $b_{\mathrm{crit}} = 2.0+0.72\log_2\kappa$ ($R^2 = 0.82$;
 $b_{\mathrm{crit}}-\log_2\kappa = 1.99\pm0.31$). Because $\kappa$ and the live fraction are collinear there, we moved
@@ -150,18 +153,19 @@ $b_{\mathrm{crit}}$ from $4.69$ to $3.65$; pooled within-cell slope $0.65$, $R^2
 In GPT-2 the independently measured per-tensor RTN cliff of each matrix follows $\log_2\kappa$ with slope $0.63$
 [$0.49$, $0.76$], $R^2 = 0.53$, against $R^2=0.14$ for $\hat F$ (joint: $2.40+0.72\log_2\kappa-0.12\log_2\hat F$), and
 converting each matrix's Gaussian-noise threshold to bits with Eq.~\eqref{eq:corrected} reproduces its RTN cliff with a
-mean error of $-0.23$ bits. The slope is $0.6$--$0.7$ rather than $1$ everywhere, and this is not a loose end: across the GPT-2 matrices the
-tolerance itself grows with the outlier ratio, $\sigma_{\mathrm{crit}}\propto\kappa^{0.46}$ ($R^2=0.35$; outlier-heavy
-tensors carry their function in a few large entries that a unit of relative noise moves less), and substituting
-$\sigma^*\propto\kappa^{0.46}$ into Eq.~\eqref{eq:corrected} predicts a slope of $1-0.46 = 0.54$, within the range
-measured in three independent settings (0.63 GPT-2, 0.65 E6, 0.72 E1). $\sigma^*$ is therefore not a constant but a
-smooth function of $\kappa$ that is flat in $F$. With per-channel scaling the pathology
+mean error of $-0.23$ bits. The slope is $0.6$--$0.7$ rather than $1$ in all three settings. A non-circular test of why: $\sigma_{\mathrm{crit}}$ is
+measured from the Gaussian-noise arm and involves no quantizer, and across the GPT-2 matrices it grows with the outlier
+ratio, $\sigma_{\mathrm{crit}}\propto\kappa^{e}$ with $e = 0.46$ [$0.29$, $0.65$] ($R^2=0.35$; outlier-heavy tensors carry
+their function in a few large entries that a unit of relative noise moves less). Substituted into
+Eq.~\eqref{eq:corrected} this predicts an RTN slope of $1-e = 0.54$ [$0.35$, $0.71$]; the slope measured independently
+from the RTN arm is $0.63$ [$0.49$, $0.75$], a paired difference of $+0.09$ [$-0.05$, $+0.26$] (replicated at $\Delta\mathrm{NLL}=0.02$, App.~\ref{app:lm}):
+consistent within error, central value $0.1$ low, so the account explains part of the shortfall, not all. $\sigma^*$ is
+not a constant but a smooth function of $\kappa$ that is flat in $F$. With per-channel scaling the pathology
 disappears and every GPT-2 matrix crosses the threshold at $2.70\pm0.33$ bits, uncorrelated with $\kappa$ or $\hat F$;
 consequently mixed precision has little left to gain: uniform per-channel RTN is within $0.01$--$0.02$ nats of a
 sensitivity oracle at 4 and 5 bits, and a $\kappa$-based allocation is \emph{worse} than uniform there (App.~\ref{app:lm},
-Table~\ref{tab:mixed}). Only a per-matrix noise probe matches the oracle, and only between integer budgets. Dithered quantization is \emph{worse} than the shared lattice
-($+0.27\pm0.13$ bits under QAT, up to $1.5$ bits post-training) because it moves the exact zeros of dead columns
-off the lattice; stochastic rounding is worse still ($+0.63\pm0.11$).
+Table~\ref{tab:mixed}). Only a per-matrix noise probe matches the oracle, and only between integer budgets. Dithered quantization is \emph{worse} than the shared lattice ($+0.27\pm0.13$ bits under QAT) because it moves
+the exact zeros of dead columns off the lattice; stochastic rounding is worse still ($+0.63\pm0.11$).
 
 \textbf{The per-feature law (E5, GPT-2; exploratory).} Under power-law importance $I_i=(i+1)^{-\alpha}$ the toy model drops features
 from the tail, and quantization respects the order (prefix fraction $0.95$--$0.99$ at every $b\ge3$ vs $0.96$--$0.98$ at
@@ -177,7 +181,7 @@ the residual stream entering block 6 (24{,}576 features, 84\,\% variance explain
 jointly: 26/84/99\,\% of the 22{,}499 live features survive 3/4/5 bits, and which ones are erased is set by their
 strength (Fig.~\ref{fig:hero}c)---features contributing $2^{-7}$ of the residual rms need $5.5$--$6$ bits, features at
 $2^{0}$ survive at 3; per-feature slope $-0.37$ [$-0.38$, $-0.37$] ($R^2 = 0.45$ per feature, $0.94$ binned), with
-frequency adding nothing ($+0.02$). Gaussian noise produces the same curves in every case.
+frequency adding nothing ($+0.02$). Gaussian noise gives the same curves in every case.
 
 
 \begin{table}[h]\centering\footnotesize
@@ -210,7 +214,8 @@ depends on architecture and loss criterion, and in GPT-2 it varies $7\times$ acr
 $\hat F$ is crude, so the GPT-2 null against it is weaker than the toy null. The LM evidence is one 124M model, one
 corpus, one SAE layer, post-training only; whether the laws hold at 7B scale is untested. We quantize weights; the
 activation-outlier phenomena behind LLM.int8 and SmoothQuant are a separate question (an activation arm is in
-App.~\ref{app:lm}). The per-feature law is exploratory. The $\kappa$ slope is $\sim0.65$, not $1$, for the reason given. The preregistered hard count had to
+App.~\ref{app:lm}). The per-feature law is exploratory. The $\kappa$ slope is $\sim0.65$, not $1$; the noise-arm account of the shortfall is
+consistent within error but its central value is $0.1$ low, so part of the gap is unexplained. The preregistered hard count had to
 be replaced by a continuous retention measure (documented before the affected results were seen, App.~\ref{app:deviations}).
 What survives is simple and testable: superposition is free to quantize; a layer's bit budget is set by its outliers;
 and at any precision the features a model loses are its weakest, in an order that one number per feature predicts.
@@ -253,9 +258,13 @@ the undamaged model is evaluated inside every damage stack so comparisons are pa
 \section{GPT-2 experiments}
 \label{app:lm}
 GPT-2 small (124M, fp32), WikiText-2 test tokens (held-out blocks for each experiment), embeddings never quantized.
-\emph{Per-matrix sweep:} each of the 48 matrices damaged alone with Gaussian noise on a log grid and RTN at 3--6 bits;
-$\Delta$NLL on 49k tokens with the residual stream cached up to the damaged block; $\kappa$ and $\hat F=d_{\mathrm{in}}/\mathrm{PR}$
-(participation ratio of the input covariance) per matrix. Per-tensor RTN on the three $\kappa\approx160$--$190$ matrices
+\emph{Per-matrix sweep:} each of the 48 matrices damaged alone with Gaussian noise on a log grid and, separately, RTN at
+3--6 bits; $\Delta$NLL on 49k tokens with the residual stream cached up to the damaged block; $\kappa$ and
+$\hat F=d_{\mathrm{in}}/\mathrm{PR}$ (participation ratio of the input covariance) per matrix. $\sigma_{\mathrm{crit}}$ is the
+Gaussian-arm threshold and $b_{\mathrm{rtn}}$ the RTN-arm cliff (log-log interpolation at the threshold); the two are
+independent measurements, so predicting one from the other through Eq.~\eqref{eq:corrected} is a test, not an identity.
+At $\Delta\mathrm{NLL}=0.02$ the noise-arm exponent is $0.57$ [$0.32$, $0.89$], predicting an RTN slope of $0.43$
+[$0.11$, $0.68$] against the measured $0.59$ [$0.35$, $0.80$] (difference $+0.16$ [$-0.02$, $+0.37$]). Per-tensor RTN on the three $\kappa\approx160$--$190$ matrices
 is pathological (non-monotone in bits; joint damage $3\times$ super-additive), which is why all joint experiments use
 per-channel scaling. \emph{Mixed precision:} allocations at equal parameter-weighted budgets on held-out tokens
 (Table~\ref{tab:mixed}). \emph{Tokens:} per-token fp32 logit margin and survival under joint quantization.
