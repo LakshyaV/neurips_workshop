@@ -149,7 +149,37 @@ directions by the same relative perturbation. The importance-ordered case is E5.
 %E2%
 
 ## E5 — importance ordering (power-law importance)
-%E5%
+Power-law importance I_i = (i+1)^−α, α ∈ {0.5, 1, 2}, m = 16, n ∈ {128, 512}, p ∈ {0.005, 0.02}, all bit-widths, 4 seeds
+(576 models). Here the model does drop features, from the tail: the hard count is well-behaved (e.g. α = 2, n = 128,
+p = 0.005: N_ret = 36.5 / 42 / 44 / 46 / 46 / 46 at b = 3 … 8 vs 46.25 at fp32). `figs/fig6_ordering.png`,
+`figs/fig6b_per_feature_bits.png`, `results/E5_model_summary.csv`, `results/E5_per_feature_bits.csv`.
+
+**P3 — ordering is preserved (confirmed).** Prefix fraction (share of the retained set that is the top-|R| by importance):
+0.955–0.979 at fp32 and 0.947–0.991 at every b ≥ 3; the largest drop is 0.032 (α = 2, n = 512, p = 0.02, b = 3), against
+the preregistered 0.10 bar. Quantization removes features from the tail of the importance ranking, exactly as fp32
+capacity does.
+
+**Per-feature critical bits.** For each feature live at fp32, b_i = the smallest b ≥ 3 with ρ_i ≥ 0.5 (9 = never by 8 bits):
+
+| α | n | p | live | b_i top-10 | b_i ranks 20–40 % | b_i tail (> 60 %) | corr(b_i, rank) | corr(b_i, ρ_i^fp32) |
+|---|---|---|---|---|---|---|---|---|
+| 0.5 | 128 | 0.02 | 102 | 3.00 | 3.03 | 3.93 | 0.51 | −0.56 |
+| 0.5 | 512 | 0.005 | 196 | 3.00 | 4.18 | — | 0.65 | −0.70 |
+| 1 | 128 | 0.005 | 121 | 3.00 | 3.00 | 4.16 | 0.54 | −0.71 |
+| 1 | 128 | 0.02 | 69 | 3.00 | 3.00 | 8.00 | 0.46 | −0.57 |
+| 1 | 512 | 0.005 | 110 | 3.00 | 5.27 | — | 0.49 | −0.67 |
+| 2 | 128 | 0.005 | 56 | 3.00 | 4.84 | — | 0.75 | −0.93 |
+| 2 | 512 | 0.005 | 48 | 3.00 | — | — | 0.73 | −0.96 |
+
+The most important features need 3 bits everywhere; the marginal ones need 4–8+. Pooled over all 4,290 live features,
+**b_i = c − 0.52·log2(ρ_i^fp32 − 0.5), R² = 0.68**: a feature's critical bit-width is set by its fp32 margin above the
+retention threshold, half a bit per halving of the margin. This is the "½ bit per doubling" exponent of the preregistered
+law — but the doubling that matters is a feature's margin, not the layer's superposition ratio. It is the mechanism behind
+the tail-loss phenomenon of Hooker et al.: rare/unimportant features sit closest to the threshold and are the first to
+be pushed under by any perturbation.
+
+b_crit (95 %) across the 12 (n, p, α) cells has slope −0.77 [−0.81, −0.70] (soft) / −0.85 (hard) in log2 F — negative,
+again because steeper importance leaves fewer live columns and a larger κ.
 
 ## E6 — κ manipulation at fixed F
 Weight clipping at c·rms(W), c ∈ {2, 3, 4, ∞}, at fixed (m = 16, n ∈ {256, 1024}, p ∈ {0.005, 0.02}), 4 seeds each,
@@ -202,7 +232,7 @@ projections are the most noise-tolerant (σ_crit ≈ 0.7) yet not the easiest to
 | P1: b_crit vs log2 F slope ½ | [0.40, 0.60] confirmed; [0.15, 0.35] other exponent; < 0.15 dead | **dead**: −0.11 [−0.12, −0.09] (QAT); +0.03 [0.02, 0.04] (PTQ); all thresholds/definitions < 0.15 |
 | P1 table of predicted b_crit (2.85 → 6.41 for F = 1 → 256) | | measured 3.1–5.2 with no F trend; predicted-vs-measured slope 0.46, R² 0.33 (κ carries it) |
 | P2: κ enters as log2 κ with slope 1 | slope ∈ [0.7, 1.3] confirmed; ≈ 0 no; between partial | **partial, strongly supported**: E6 causal slope 0.65 (R² 0.92); E1 0.72 (R² 0.82); GPT-2 0.63 (R² 0.53) |
-| P3: ordering preserved under quantization (power-law importance) | drop in prefix fraction < 0.10 at b ≥ 3 | %P3% |
+| P3: ordering preserved under quantization (power-law importance) | drop in prefix fraction < 0.10 at b ≥ 3 | **confirmed**: prefix-fraction drop ≤ 0.03 at every b ≥ 3 (bar: 0.10); per-feature b_i = c − 0.52·log2(margin_i), R² 0.68 |
 | E4: top-3 ρ unchanged (translation) | drop < 0.05 for b ≥ b_crit | **tilt, not translation** under uniform importance: the whole plateau moves |
 | E3: noise-like damage slope −½, structured ≈ 0 | | **all noise-like families ≈ 0** (+0.00 … +0.05); dropout +0.24; rank: catastrophic |
 | E2: Q vs dithered Q_u | no direction preregistered | shared lattice **better** (PTQ: dither costs 0.2–1.5 bits; QAT: %E2SHORT%) — because the lattice contains 0 |
@@ -217,5 +247,9 @@ projections are the most noise-tolerant (σ_crit ≈ 0.7) yet not the easiest to
 - The [K, n, n] Gram matrix for D_i on stacked damage levels (512 models × 2048²) exhausted MPS memory and stalled every
   GPU job; chunked over models.
 - Three concurrent MPS jobs stall each other; at most two were run at a time afterwards.
+- A git history rewrite (to purge a 128 MB model blob that an early `git add -A` had captured) checked out the
+  rewritten tree and deleted the tracked raw parquet files and job logs from the working directory. All derived
+  artefacts (per-model summaries, b_crit tables, threshold CSVs, figures) survived; the per-feature E1 rows were
+  regenerated from the saved checkpoints (`src/regen_rows.py`) and the four smallest E1 groups were retrained.
 - `tms_numpy_pilot.py` was not shipped with the plan; a minimal numpy reference with manual gradients was written and
   the port cross-checked against it.
