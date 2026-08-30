@@ -9,7 +9,7 @@ tolerance σ*, not by F. Read in this order: `PREDICTIONS.md` (never edit), `DEV
 ## Environment
 - `source .venv/bin/activate && export PYTORCH_ENABLE_MPS_FALLBACK=1 HF_HUB_OFFLINE=1`
 - Python 3.12 venv (uv), torch 2.13 on Apple MPS, fp32 everywhere. GPT-2 weights are in the HF cache.
-- Papers: `paper/main.tex` (v1, long) and `paper/main_v2.tex` (v2, 4-page AXIOM submission, official `neurips_2026.sty` + checklist); compile with tectonic. Keep both.
+- Papers: v1 `main.tex` (12 pp), v2 `main_v2*.tex` (4 pp), v3 `main_v3.tex` (9 pp long form), **v4 `main_v4*.tex` = what was submitted to AXIOM on 2026-08-29** (git tag `axiom-submitted`; keywords variant `main_v4_keywords.tex`; named copy `main_v4_named.tex`). Compile with tectonic. Post-submission edits in the sources are for camera-ready only.
 
 ## Layout
 - `src/quant.py` batched fake quantizers (per-model tensor `qmax`/`mode`, STE) + post-hoc damage ops
