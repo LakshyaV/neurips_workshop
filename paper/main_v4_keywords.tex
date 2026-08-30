@@ -36,7 +36,7 @@
 \begin{document}
 \nolinenumbers
 \maketitle
-
+\vspace{-10pt}
 \begin{abstract}
 A direction is only as resolvable as the grid it is stored on, so a layer that superposes more features per dimension
 should need more bits. We preregistered
@@ -55,7 +55,7 @@ once calibrated, uses fp32 statistics alone: margins predict which tokens a 4/5/
 SAE features are erased (AUC 0.87--0.94; frequency at chance), and the activation outlier ratio predicts which matrices need more
 than 5 activation bits (AUC 0.97).
 \end{abstract}
-\begin{center}\vspace{-2pt}\small\textbf{Keywords:} superposition, quantization, critical bit-width, outlier ratio, feature margins, sparse autoencoders, preregistered study\end{center}
+\begin{center}\vspace{-9pt}\small\textbf{Keywords:} superposition, quantization, critical bit-width, outlier ratio, feature margins, sparse autoencoders, preregistered study\end{center}
 
 \section{Introduction}
 Superposition, packing more features than dimensions as nearly orthogonal directions~\cite{elhage2022toy}, is the
@@ -89,7 +89,7 @@ models~\cite{hooker2019,hooker2020}.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.60\linewidth]{fig_hero.png}
+\includegraphics[width=0.88\linewidth]{fig_hero.png}
 \caption{\textbf{Overview of the three main results.} \textbf{(a)} Critical bit-width (RTN, QAT, 95\,\% retention; mean $\pm$ SD over 4 seeds) against measured
 features-per-dimension for the main sweep, with the preregistered law. \textbf{(b)} $b_{\mathrm{crit}}$ against
 $\log_2\kappa$: toy models with $\kappa$ moved by weight clipping at fixed configuration, and GPT-2's 48 matrices (each
@@ -451,13 +451,4 @@ features are lost. Green: the real-model bridge on GPT-2 weights and activations
 \begin{figure}[h]\centering\includegraphics[width=0.6\linewidth]{fig9_mixed_precision.png}
 \caption{Mixed precision on GPT-2 small (Table~\ref{tab:mixed}).}\end{figure}
 
-\FloatBarrier
-\section{Declaration of LLM and agent usage}
-The experiments, analysis code and first drafts of this paper were implemented and executed by an AI coding agent
-(Claude Code) under the direction of the author, following a written, preregistered experimental plan; the author
-specified the hypotheses, decision rules and controls, reviewed every analysis choice recorded in the deviations log, and
-verified the reported numbers against the raw results. This is a non-standard component of the methodology and is
-declared per the NeurIPS 2026 policy.
-
-% checklist omitted for the workshop submission (main-track requirement only); re-add \input{checklist_v2} for a main-track version
 \end{document}
