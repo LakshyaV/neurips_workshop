@@ -108,6 +108,34 @@ def kappa_report(model, group=128):
     return rows
 
 
+def prepare(model_id, out_dir, kappa_csv, seed=1, dtype="bf16", device="cpu"):
+    """Load a real model, fold + R1-rotate, save the rotated checkpoint, write the kappa CSV.
+
+    kappa_after is measured on the SAVED weights (rotated in double, rounded back to the
+    model dtype), i.e. exactly what the rotated-arm RTN cliffs will quantize. The CSV
+    (block, matrix, kappa_before/after, kg_max_before/after) is what score_v2's P6 reads.
+    """
+    import numpy as np, pandas as pd
+    from transformers import AutoModelForCausalLM
+    dt = torch.bfloat16 if dtype == "bf16" else torch.float32
+    model = AutoModelForCausalLM.from_pretrained(model_id, dtype=dt).to(device).eval()
+    for p in model.parameters():
+        p.requires_grad_(False)
+    before = kappa_report(model)
+    fold_norms(model)
+    Q = random_hadamard(model.config.hidden_size, seed=seed)
+    rotate_r1(model, Q)
+    after = kappa_report(model)
+    m = pd.DataFrame(before).merge(pd.DataFrame(after), on=["block", "matrix"],
+                                   suffixes=("_before", "_after"))
+    m.to_csv(kappa_csv, index=False)
+    dk = np.log2(m.kappa_before / m.kappa_after)
+    print(f"kappa: mean log2 reduction {dk.mean():+.3f}, "
+          f"range [{dk.min():+.3f}, {dk.max():+.3f}] over {len(m)} matrices (R1 seed {seed})")
+    model.save_pretrained(out_dir, safe_serialization=True)
+    print(f"rotated model saved to {out_dir}; kappa table to {kappa_csv}")
+
+
 def exactness_test():
     """Random-init tiny Llama: fold + rotate must leave the logits unchanged (fp32 tolerance)."""
     from transformers import LlamaConfig, LlamaForCausalLM
@@ -147,6 +175,17 @@ def exactness_test():
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--exactness", action="store_true")
+    ap.add_argument("--model", help="model id or path to fold+rotate (prepare mode)")
+    ap.add_argument("--out-dir", help="where to save the rotated checkpoint")
+    ap.add_argument("--kappa-csv", help="where to write the kappa before/after table")
+    ap.add_argument("--seed", type=int, default=1, help="R1 sign seed (preregistered: 1)")
+    ap.add_argument("--dtype", default="bf16", choices=["bf16", "fp32"])
+    ap.add_argument("--device", default="cpu")
     args = ap.parse_args()
     if args.exactness:
         exactness_test()
+    elif args.model:
+        assert args.out_dir and args.kappa_csv, "prepare mode needs --out-dir and --kappa-csv"
+        prepare(args.model, args.out_dir, args.kappa_csv, args.seed, args.dtype, args.device)
+    else:
+        ap.print_help()
