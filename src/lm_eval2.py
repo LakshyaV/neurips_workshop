@@ -14,8 +14,9 @@ Validation protocol (no new results): the prefix-cache path must reproduce the f
 so its dnll curve must match the original run -- src/validate_port.py compares recomputed
 thresholds against results/lm_layer_thresholds.csv.
 
-Gaussian noise is seeded per (block, matrix, level) so results do not depend on which subset of
-blocks is run; draws therefore differ from the original lm_eval.py run, and gaussian arms are
+Gaussian noise is seeded per (block, matrix, level[, draw]) with a process-independent seed
+(`stable_seed`), so results depend neither on which subset of blocks is run nor on the
+interpreter process; draws differ from the original lm_eval.py run, and gaussian arms are
 compared at the threshold level, not the sample level.
 """
 import argparse, os, math, time
@@ -85,6 +86,16 @@ def make_adapter(model):
     raise ValueError(f"no adapter for model_type={kind}")
 
 
+def stable_seed(*parts):
+    """Process-independent RNG seed. Python's hash() of a str is salted per interpreter
+    process (PYTHONHASHSEED), so hash-based seeds silently differ between runs; md5 of the
+    canonical key string does not. Gaussian rows written before 2026-10-11 used hash() and
+    are reproducible only at the threshold level, not draw-exactly."""
+    import hashlib
+    s = "|".join(str(p) for p in parts)
+    return int.from_bytes(hashlib.md5(s.encode()).digest()[:4], "little") & 0x7FFFFFFF
+
+
 def get_mod(block, name):
     m = block
     for part in name.split("."):
@@ -112,6 +123,7 @@ def weight_stats(Wc, group=128):
     rms_c = (n2_c / Wc.shape[0]).sqrt()
     kc = amax_c / rms_c
     kappa_eff = float((kc.pow(2) * n2_c).sum().sqrt() / n2_c.sum().sqrt())
+    kc_med, kc_mean = float(kc.median()), float(kc.mean())
     ng = Wc.shape[0] // group
     kg_stats = {}
     if ng >= 1:
@@ -120,7 +132,7 @@ def weight_stats(Wc, group=128):
         kg_stats = dict(kg_med=float(kg.median()), kg_p90=float(torch.quantile(kg, 0.90)),
                         kg_max=float(kg.max()))
     return dict(rms=rms, amax=amax, kappa=amax / rms, kappa_eff=kappa_eff,
-                kc_max=float(kc.max()), **kg_stats)
+                kc_max=float(kc.max()), kc_med=kc_med, kc_mean=kc_mean, **kg_stats)
 
 
 def damage(Wc, fam, knob, gen, group=128):
@@ -276,6 +288,9 @@ def main():
     ap.add_argument("--sigmas", default="0.03,0.045,0.07,0.1,0.15,0.22,0.33,0.5,0.75")
     ap.add_argument("--bits", default="3,4,5,6")
     ap.add_argument("--families", default="gaussian,rtn", help="subset of gaussian,rtn,rtn_pc,rtn_gw")
+    ap.add_argument("--draws", type=int, default=1,
+                    help="independent z draws per (matrix, sigma) for the gaussian family "
+                         "(PREDICTIONS_V2: 2 on the 8B model); draw 0 reproduces --draws 1 exactly")
     ap.add_argument("--group", type=int, default=128)
     ap.add_argument("--blocks", default=None)
     ap.add_argument("--batch", type=int, default=8)
@@ -343,23 +358,26 @@ def main():
             base = dict(block=L, matrix=name, d_in=Wc0.shape[0], d_out=Wc0.shape[1],
                         PR=pr[(L, name)], F_hat=Wc0.shape[0] / pr[(L, name)],
                         n_tokens=nseq * args.seqlen, **st)
+            r0 = len(rows)
             for fam, knob in levels:
-                gen = torch.Generator(device="cpu").manual_seed((hash((L, name, fam, round(knob * 1e6))) & 0x7FFFFFFF))
-                Wd = damage(Wc0, fam, knob, gen, args.group)
-                sig_rel = ((Wd - Wc0).float().pow(2).mean().sqrt() / st["rms"]).item()
-                mod.weight.copy_(Wd if ad.conv1d else Wd.t())
-                t1 = time.time()
-                nll = torch.cat([ad.forward_from(hL[i:i + args.batch].to(args.device), L,
-                                                 ids[i:i + args.batch].to(args.device)).cpu()
-                                 for i in range(0, nseq, args.batch)])
-                mod.weight.copy_(W0)
-                d = nll - nll_clean
-                rows.append(dict(base, family=fam, knob=float(knob), sigma_rel=sig_rel,
-                                 dnll=float(d.mean()), dnll_sem=float(d.std() / math.sqrt(len(d))),
-                                 nll=float(nll.mean()), eval_s=time.time() - t1))
+                for dr in range(args.draws if fam == "gaussian" else 1):
+                    key = (L, name, fam, round(knob * 1e6)) + ((dr,) if dr else ())
+                    gen = torch.Generator(device="cpu").manual_seed(stable_seed(*key))
+                    Wd = damage(Wc0, fam, knob, gen, args.group)
+                    sig_rel = ((Wd - Wc0).float().pow(2).mean().sqrt() / st["rms"]).item()
+                    mod.weight.copy_(Wd if ad.conv1d else Wd.t())
+                    t1 = time.time()
+                    nll = torch.cat([ad.forward_from(hL[i:i + args.batch].to(args.device), L,
+                                                     ids[i:i + args.batch].to(args.device)).cpu()
+                                     for i in range(0, nseq, args.batch)])
+                    mod.weight.copy_(W0)
+                    d = nll - nll_clean
+                    rows.append(dict(base, family=fam, knob=float(knob), draw=dr, sigma_rel=sig_rel,
+                                     dnll=float(d.mean()), dnll_sem=float(d.std() / math.sqrt(len(d))),
+                                     nll=float(nll.mean()), eval_s=time.time() - t1))
             print(f"block {L:2d} {name:20s} κ={st['kappa']:6.1f} κ_eff={st['kappa_eff']:5.1f} "
                   f"κg_max={st.get('kg_max', float('nan')):6.1f} | "
-                  + " ".join(f"{r['knob']:.3g}:{r['dnll']:.3f}" for r in rows[-len(levels):])
+                  + " ".join(f"{r['knob']:.3g}:{r['dnll']:.3f}" for r in rows[r0:])
                   + f"  ({time.time()-t0:.0f}s)", flush=True)
             pd.DataFrame(rows).to_parquet(args.out, index=False)
     print("ALL DONE", flush=True)

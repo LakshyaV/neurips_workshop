@@ -21,7 +21,7 @@ the read point).
 import argparse, json, os
 import numpy as np, pandas as pd, torch
 
-from .lm_eval2 import make_adapter, get_mod, canon, damage
+from .lm_eval2 import make_adapter, get_mod, canon, damage, stable_seed
 
 RES = os.path.join(os.path.dirname(__file__), "..", "results")
 
@@ -164,7 +164,7 @@ def main():
     for fam, knob in levels:
         for (L, name), mod, w in zip(keys, mods, W0):
             gen = torch.Generator(device="cpu").manual_seed(
-                hash((L, name, fam, round(knob * 1e6))) & 0x7FFFFFFF)
+                stable_seed(L, name, fam, round(knob * 1e6)))
             Wd = damage(canon(w, ad.conv1d), fam, knob, gen, args.group)
             mod.weight.copy_(Wd if ad.conv1d else Wd.t())
         run(f"{col[fam]}{knob:g}" if fam == "gaussian" else f"{col[fam]}{int(knob)}")
