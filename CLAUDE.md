@@ -20,6 +20,12 @@ tolerance σ*, not by F. Read in this order: `PREDICTIONS.md` (never edit), `DEV
 - `src/analysis.py` (E1: summaries, b_crit, seed bootstrap, figs 1/2/4), `src/analysis2.py` (E2/E3/E5/E6)
 - `src/regen_rows.py` rebuild per-feature rows from `results/ckpt/*.pt`; `src/merge_e1.py`
 - `tests/test_quant.py` (11 tests), `tests/crosscheck_numpy.py` (port vs `tms_numpy_pilot.py`)
+- v2 (ICML draft): `paper/main_v5.tex`; `src/lm_eval2.py` architecture-generic harness (GPT-2 +
+  Llama-class adapters, `rtn_gw` g=128, tail κ stats, `--stats-only` spike mode, `--mechanics-check`);
+  `src/validate_port.py` (GPT-2 rerun vs `results/lm_layer_thresholds.csv`); `src/rotate.py` RMSNorm
+  folding + QuaRot-style R1 Hadamard rotation (`--exactness`, no download); `src/analysis_pc_stats.py`
+  per-channel κ-statistic investigation. `PREDICTIONS_V2.md` is the Phase 2 prereg DRAFT — binding only
+  once posted to OSF, **no Llama-3.1-8B damage runs before its timestamp** (`PREDICTIONS.md` stays never-edit)
 
 ## Conventions that matter
 - Primary retention metric is `R_live` (explained variance of the features live at fp32, unclipped, paired
