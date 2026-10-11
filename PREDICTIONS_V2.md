@@ -34,6 +34,9 @@ under "Known at preregistration time". Decision bands are proposals; the author 
   v1's GPT-2 numbers are unaffected as published (their cross-matrix bootstrap absorbs this).
 - Compute cap: **$150 / ~40 GPU-hours**; stop and report before exceeding.
 - Order of execution: **P6 (rotation) first**, then P4/P5, P7, P8, P9.
+- Scoring: `src/score_v2.py`, committed before any 8B damage data exists, encodes every
+  decision band below verbatim (BANDS dict) and is the script that scores P4–P9; smoke-tested
+  on GPT-2 validation data (reproduces v1-consistent numbers through its own code paths).
 - Every later analysis change: dated entry in DEVIATIONS.md (continuing D6, D7, …), written
   before the affected results are inspected.
 
