@@ -4,7 +4,8 @@ Adds to the original GPT-2-only harness:
   - a Llama-class adapter (q/k/v/o + gate/up/down nn.Linear, RoPE block iteration);
   - group-wise RTN (`rtn_gw`, groups of g=128 along the input dimension), the modern default;
   - tail incoherence statistics per matrix (kc_max, kg_p90, kg_max) next to kappa / kappa_eff;
-  - `--stats-only` (the kappa-only spike: weight statistics, NO damage evaluations);
+  - `--stats-only` (the kappa-only spike: weight statistics, NO damage evaluations) and
+    `--stream-stats` (same rows streamed from safetensors shards, no model instantiation);
   - `--dtype bf16` for 7B-class models ("full-precision statistics" = the released bf16 weights);
   - `--mechanics-check` on a random-init Llama config (no download, no science).
 
@@ -216,6 +217,52 @@ def mechanics_check(device="cpu"):
     print("mechanics-check PASSED: llama prefix cache == full forward; all 4 damage families ran")
 
 
+def stream_stats(model_id, group=128, out=None):
+    """kappa-only spike without instantiating the model: read safetensors shards directly.
+
+    Peak memory is one weight tensor (float32 copy included), so an 8B bf16 checkpoint runs
+    comfortably on a laptop. Must produce the same rows as --stats-only (validated on GPT-2
+    and a random-init saved Llama); orientation and dtype handling mirror the model path
+    (stored dtype -> canonical [d_in, d_out] view -> .float() before weight_stats).
+    """
+    import json, re, glob
+    from safetensors import safe_open
+    if os.path.isdir(model_id):
+        snap = model_id
+    else:
+        from huggingface_hub import snapshot_download
+        snap = snapshot_download(model_id, allow_patterns=[
+            "*.safetensors", "*.safetensors.index.json", "config.json"])
+    with open(os.path.join(snap, "config.json")) as f:
+        kind = json.load(f)["model_type"]
+    if kind == "gpt2":
+        mats, conv1d = GPT2Adapter.mats, True
+    elif kind in ("llama", "mistral", "qwen2"):
+        mats, conv1d = LlamaAdapter.mats, False
+    else:
+        raise ValueError(f"no adapter for model_type={kind}")
+    pat = re.compile(r"\.(\d+)\.(" + "|".join(re.escape(m) for m in mats) + r")\.weight$")
+    found = {}
+    for path in sorted(glob.glob(os.path.join(snap, "*.safetensors"))):
+        with safe_open(path, framework="pt", device="cpu") as sf:
+            for key in sf.keys():
+                m = pat.search(key)
+                if not m:
+                    continue
+                L, name = int(m.group(1)), m.group(2)
+                Wc = canon(sf.get_tensor(key), conv1d)
+                found[(L, name)] = dict(block=L, matrix=name, d_in=Wc.shape[0], d_out=Wc.shape[1],
+                                        **weight_stats(Wc.float(), group))
+    if not found:
+        raise RuntimeError(f"no matrices matched in {snap} (keys use a different naming scheme?)")
+    rows = [found[k] for k in sorted(found, key=lambda k: (k[0], mats.index(k[1])))]
+    df = pd.DataFrame(rows)
+    if out:
+        df.to_csv(out, index=False)
+        print(f"stream-stats[{kind}]: wrote {len(rows)} rows to {out}")
+    return df
+
+
 # -------------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser()
@@ -234,11 +281,16 @@ def main():
     ap.add_argument("--batch", type=int, default=8)
     ap.add_argument("--stats-only", action="store_true",
                     help="kappa-only spike: weight statistics for every matrix, no damage evals")
+    ap.add_argument("--stream-stats", action="store_true",
+                    help="stats-only but streamed from safetensors shards (no model instantiation)")
     ap.add_argument("--mechanics-check", action="store_true")
     ap.add_argument("--out", default=os.path.join(RES, "lm2_layers.parquet"))
     args = ap.parse_args()
     if args.mechanics_check:
         mechanics_check()
+        return
+    if args.stream_stats:
+        stream_stats(args.model, args.group, args.out.replace(".parquet", "_stats.csv"))
         return
     from transformers import AutoModelForCausalLM
     dtype = torch.float32 if args.dtype == "fp32" else torch.bfloat16

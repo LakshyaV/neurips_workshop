@@ -21,7 +21,7 @@ tolerance σ*, not by F. Read in this order: `PREDICTIONS.md` (never edit), `DEV
 - `src/regen_rows.py` rebuild per-feature rows from `results/ckpt/*.pt`; `src/merge_e1.py`
 - `tests/test_quant.py` (11 tests), `tests/crosscheck_numpy.py` (port vs `tms_numpy_pilot.py`)
 - v2 (ICML draft): `paper/main_v5.tex`; `src/lm_eval2.py` architecture-generic harness (GPT-2 +
-  Llama-class adapters, `rtn_gw` g=128, tail κ stats, `--stats-only` spike mode, `--mechanics-check`);
+  Llama-class adapters, `rtn_gw` g=128, tail κ stats, `--stats-only`/`--stream-stats` spike modes, `--mechanics-check`);
   `src/validate_port.py` (GPT-2 rerun vs `results/lm_layer_thresholds.csv`); `src/rotate.py` RMSNorm
   folding + QuaRot-style R1 Hadamard rotation (`--exactness`, no download); `src/analysis_pc_stats.py`
   per-channel κ-statistic investigation. `PREDICTIONS_V2.md` is the Phase 2 prereg DRAFT — binding only

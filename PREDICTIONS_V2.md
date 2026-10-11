@@ -13,6 +13,9 @@ under "Known at preregistration time". Decision bands are proposals; the author 
 - Thresholds and rules identical to v1: ΔNLL = 0.05 primary, 0.02 replication; log-log
   interpolation for crossings; censoring labels as in v1. Matrix-bootstrap CIs.
 - Harness: `src/lm_eval2.py` (architecture-generic port) + `src/rotate.py` (R1 rotation).
+  The κ-only spike runs via `--stream-stats` (statistics streamed from safetensors shards,
+  no model instantiation; validated bit-identical to the model path on GPT-2 and a saved
+  random-init Llama).
   Port validation on GPT-2 (known results, 2026-10-11): κ identical to 7e-15; RTN b_crit
   max |new−ref| = 0.0000 bits (11 uncensored matrices, blocks 0/5/11); gaussian arm bit-exact
   (worst |Δdnll| = 0.0000 over 36 (matrix, σ) points) once the original generator stream is
