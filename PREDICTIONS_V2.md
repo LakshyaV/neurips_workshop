@@ -70,8 +70,12 @@ follows log2 κ_act with slope in **[0.8, 1.4]** (naive prediction 1; v1: 1.12 [
 
 **P9 — full-precision forecasting transfers.** (a) Logit margins predict 4-bit g=128 token
 flips with AUC ≥ **0.75**; (b) Llama Scope SAE feature magnitudes predict erasure at 4 bits
-with AUC ≥ **0.8** (one post-MLP residual SAE layer, chosen and named before any damage run:
-[LAYER TBD]); (c) κ_act flags matrices needing > 5 activation bits with AUC ≥ **0.85**.
+with AUC ≥ **0.8**. SAE chosen and named before any damage run: **L15R-8x**
+(`OpenMOSS-Team/Llama3_1-8B-Base-LXR-8x`, folder `Llama3_1-8B-Base-L15R-8x`, hook
+`blocks.15.hook_resid_post`, d_model 4096 → 32,768 features, JumpReLU, dataset-wise norm) —
+the post-MLP residual after layer 15, i.e. the stream entering layer 16 of 32, the same
+half-depth read point as v1 (resid entering block 6 of 12); matrices in layers 0–15 are
+damaged, layers 16+ left intact; (c) κ_act flags matrices needing > 5 activation bits with AUC ≥ **0.85**.
 
 ## Not covered (declared exploratory if run)
 Joint weight+activation quantization; R2/R3/R4 online rotations; GPTQ-style adaptive rounding;
